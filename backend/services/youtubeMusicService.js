@@ -9,18 +9,7 @@ import { videoInfoCache } from '../utils/cache.js';
 import * as youtubeService from './youtubeService.js';
 import * as ytdlpService from './ytdlpService.js';
 
-const getYtdlpInstance = () => {
-  const isWin = process.platform === 'win32';
-  const assetName = isWin ? 'yt-dlp.exe' : 'yt-dlp';
-  const tempPath = path.join(os.tmpdir(), assetName);
-  const binaryPath =
-    process.env.YTDLP_CUSTOM_BINARY || (fs.existsSync(tempPath) ? tempPath : null);
-
-  if (binaryPath && fs.existsSync(binaryPath)) {
-    return ytdlp.create(binaryPath);
-  }
-  return ytdlp;
-};
+const getYtdlpInstance = () => ytdlpService.getYtdlpInstance();
 
 export const parseYouTubeMusicUrl = (urlString) => {
   try {

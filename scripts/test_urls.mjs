@@ -1,5 +1,5 @@
-const API =  "http://localhost:3001";
-// const API =  "https://mediasaver.codedeck.me";
+const API = process.env.API || "https://mediasaver-57yu.onrender.com";
+// const API =  "http://localhost:3001";
 
 const URLS = [
   ["YouTube  watch", "https://www.youtube.com/watch?v=rkKZIMPecRA"],
@@ -64,13 +64,31 @@ async function test(name, url) {
   }
 }
 
-const results = await Promise.all(URLS.map(([n, u]) => test(n, u)));
+async function runPool(items, limit, fn) {
+  const results = new Array(items.length);
+  let currentIndex = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (currentIndex < items.length) {
+      const idx = currentIndex++;
+      const res = await fn(items[idx], idx);
+      results[idx] = res;
+      console.log(`[${idx + 1}/${items.length}] ${res.Case.padEnd(22)}: ${res.Result} (${res.Time}) - ${res.Info}`);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 
+console.log(`Testing ${URLS.length} URLs against ${API} with concurrency 3...\n`);
+const results = await runPool(URLS, 3, ([n, u]) => test(n, u));
+
+console.log("\nSummary Table:");
 console.table(results);
 console.log(
-  `${results.filter((r) => r.Result === "PASS").length}/${results.length} passed`,
+  `\n${results.filter((r) => r.Result === "PASS").length}/${results.length} passed`,
 );
 
 const failed = results.filter((r) => r.Result !== "PASS");
-if (failed.length)
-  console.log("Failing:", failed.map((r) => r.Case).join(", "));
+if (failed.length) {
+  console.log("Failing cases:", failed.map((r) => `${r.Case} (${r.Result}: ${r.Info})`).join("\n  "));
+}

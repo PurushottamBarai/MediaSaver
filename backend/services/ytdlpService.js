@@ -18,7 +18,9 @@ const isFacebookUrl = (url) =>
 
 const normalizeUrl = (url) => {
   if (!url || typeof url !== "string") return url;
-  const ytWatchMatch = url.match(/(?:youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/i);
+  const ytWatchMatch = url.match(
+    /(?:youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/i,
+  );
   if (ytWatchMatch && ytWatchMatch[1]) {
     return `https://www.youtube.com/watch?v=${ytWatchMatch[1]}`;
   }
@@ -40,7 +42,8 @@ const getYtdlpInstance = () => {
   const assetName = isWin ? "yt-dlp.exe" : "yt-dlp";
   const tempPath = path.join(os.tmpdir(), assetName);
   const binaryPath =
-    process.env.YTDLP_CUSTOM_BINARY || (fs.existsSync(tempPath) ? tempPath : null);
+    process.env.YTDLP_CUSTOM_BINARY ||
+    (fs.existsSync(tempPath) ? tempPath : null);
 
   if (binaryPath && fs.existsSync(binaryPath)) {
     return ytdlp.create(binaryPath);
@@ -89,8 +92,18 @@ const applyCommonFlags = (targetUrl, baseFlags) => {
     noPlaylist: true,
     ...baseFlags,
   };
-  if (typeof targetUrl === "string" && /youtube\.com|youtu\.be/i.test(targetUrl)) {
-    flags.extractorArgs = "youtube:player_client=android;player_skip=webpage,configs";
+  if (
+    typeof targetUrl === "string" &&
+    /youtube\.com|youtu\.be/i.test(targetUrl)
+  ) {
+    flags.extractorArgs =
+      "youtube:player_client=android;player_skip=webpage,configs";
+  }
+  if (
+    typeof targetUrl === "string" &&
+    /dailymotion\.com|dai\.ly/i.test(targetUrl)
+  ) {
+    flags.impersonate = "chrome";
   }
   return flags;
 };
@@ -100,7 +113,10 @@ const formatAndLogStderr = (fnName, url, error) => {
     ? error.stderr.trim()
     : error.shortMessage || error.message || String(error);
   const exitCode = error.exitCode ?? error.code ?? "N/A";
-  if (stderrDetails.includes('[youtube]') && stderrDetails.includes('Sign in to confirm')) {
+  if (
+    stderrDetails.includes("[youtube]") &&
+    stderrDetails.includes("Sign in to confirm")
+  ) {
     process.stdout.write(
       `[ytdlpService] Embedded YouTube video detected in external post (${url}). Routing to Tier 1 YouTube engine...\n`,
     );
@@ -180,7 +196,25 @@ const fetchVideoInfo = async (url) => {
     flags,
     async (runFlags) => {
       const ytdlpExec = getYtdlpInstance();
-      const { stdout } = await ytdlpExec.exec(targetUrl, runFlags);
+      let stdout;
+      try {
+        const res = await ytdlpExec.exec(targetUrl, runFlags);
+        stdout = res.stdout;
+      } catch (err) {
+        const stderr = err.stderr || err.shortMessage || err.message || "";
+        if (
+          (stderr.includes("The extractor is attempting impersonation, but none of these impersonate targets are available") ||
+            stderr.includes("No video formats found!")) &&
+          runFlags.impersonate !== "chrome"
+        ) {
+          process.stdout.write(`[ytdlpService] Retrying ${targetUrl} with --impersonate chrome...\n`);
+          const fallbackFlags = { ...runFlags, impersonate: "chrome" };
+          const res = await ytdlpExec.exec(targetUrl, fallbackFlags);
+          stdout = res.stdout;
+        } else {
+          throw err;
+        }
+      }
       const trimmed = (stdout || "").trim();
       try {
         return JSON.parse(trimmed);
@@ -248,25 +282,25 @@ const getHttpStream = (streamUrl, maxRedirects = 5) => {
 // Tier 1: YouTubei Internal Search API (fast, ~200ms, not IP-blocked on Render)
 // Tier 2: yt-dlp ytsearch1 fallback
 const resolveSearchVideoId = async (searchQuery) => {
-  if (!searchQuery || typeof searchQuery !== 'string') return null;
+  if (!searchQuery || typeof searchQuery !== "string") return null;
 
   // Tier 1: YouTubei Search API
   try {
-    const res = await fetch('https://www.youtube.com/youtubei/v1/search', {
-      method: 'POST',
+    const res = await fetch("https://www.youtube.com/youtubei/v1/search", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        "Content-Type": "application/json",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
       },
       body: JSON.stringify({
         query: searchQuery,
         context: {
           client: {
-            clientName: 'WEB',
-            clientVersion: '2.20240722.01.00',
-            hl: 'en',
-            gl: 'US',
+            clientName: "WEB",
+            clientVersion: "2.20240722.01.00",
+            hl: "en",
+            gl: "US",
           },
         },
       }),
@@ -281,7 +315,10 @@ const resolveSearchVideoId = async (searchQuery) => {
       const items = sections?.[0]?.itemSectionRenderer?.contents;
       if (Array.isArray(items)) {
         const firstVideo = items.find((i) => i.videoRenderer)?.videoRenderer;
-        if (firstVideo?.videoId && /^[a-zA-Z0-9_-]{10,12}$/.test(firstVideo.videoId)) {
+        if (
+          firstVideo?.videoId &&
+          /^[a-zA-Z0-9_-]{10,12}$/.test(firstVideo.videoId)
+        ) {
           return firstVideo.videoId;
         }
       }
@@ -295,25 +332,31 @@ const resolveSearchVideoId = async (searchQuery) => {
       const proc = ytdlpExec.exec(
         `ytsearch1:${searchQuery}`,
         {
-          print: 'id',
+          print: "id",
           noPlaylist: true,
           noWarnings: true,
           socketTimeout: 15,
         },
-        { stdio: ['ignore', 'pipe', 'ignore'] },
+        { stdio: ["ignore", "pipe", "ignore"] },
       );
 
-      let output = '';
-      if (proc.stdout) proc.stdout.on('data', (chunk) => { output += chunk.toString(); });
+      let output = "";
+      if (proc.stdout)
+        proc.stdout.on("data", (chunk) => {
+          output += chunk.toString();
+        });
 
       const timer = setTimeout(() => resolve(null), 15000);
 
-      proc.on('close', () => {
+      proc.on("close", () => {
         clearTimeout(timer);
-        const id = output.trim().split('\n')[0].trim();
+        const id = output.trim().split("\n")[0].trim();
         resolve(/^[a-zA-Z0-9_-]{10,12}$/.test(id) ? id : null);
       });
-      proc.on('error', () => { clearTimeout(timer); resolve(null); });
+      proc.on("error", () => {
+        clearTimeout(timer);
+        resolve(null);
+      });
     } catch {
       resolve(null);
     }
@@ -347,15 +390,15 @@ const downloadVideo = async (url, formatId, type) => {
       } else {
         const videoFormats = cached.formats.filter((f) => f.vcodec !== "none");
         const hasSeparateHigherRes = videoFormats.some(
-          (f) => f.acodec === "none" && (f.height > 480 || (f.tbr && f.tbr > 1200)),
+          (f) =>
+            f.acodec === "none" && (f.height > 480 || (f.tbr && f.tbr > 1200)),
         );
 
         if (!hasSeparateHigherRes) {
           const topProgressive = videoFormats
             .filter((f) => f.acodec !== "none" && f.url)
             .sort(
-              (a, b) =>
-                (b.height || b.tbr || 0) - (a.height || a.tbr || 0),
+              (a, b) => (b.height || b.tbr || 0) - (a.height || a.tbr || 0),
             )[0];
           if (topProgressive) {
             candidate = topProgressive;
@@ -413,9 +456,22 @@ const downloadVideo = async (url, formatId, type) => {
     ];
   }
 
-  await executeWithFallback("downloadVideo", targetUrl, flags, (runFlags) => {
+  await executeWithFallback("downloadVideo", targetUrl, flags, async (runFlags) => {
     const ytdlpExec = getYtdlpInstance();
-    return ytdlpExec(targetUrl, runFlags);
+    try {
+      return await ytdlpExec(targetUrl, runFlags);
+    } catch (err) {
+      const stderr = err.stderr || err.shortMessage || err.message || "";
+      if (
+        (stderr.includes("The extractor is attempting impersonation, but none of these impersonate targets are available") ||
+          stderr.includes("No video formats found!")) &&
+        runFlags.impersonate !== "chrome"
+      ) {
+        process.stdout.write(`[ytdlpService] Retrying download for ${targetUrl} with --impersonate chrome...\n`);
+        return await ytdlpExec(targetUrl, { ...runFlags, impersonate: "chrome" });
+      }
+      throw err;
+    }
   });
 
   const stream = fs.createReadStream(filePath);

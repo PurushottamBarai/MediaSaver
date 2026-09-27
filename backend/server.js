@@ -64,7 +64,10 @@ const updateYtDlpBinary = async () => {
 
   try {
     const isWin = process.platform === 'win32';
-    const assetName = isWin ? 'yt-dlp.exe' : 'yt-dlp';
+    const isLinux = process.platform === 'linux';
+    const assetName = isWin
+      ? 'yt-dlp.exe'
+      : (isLinux ? (os.arch() === 'arm64' ? 'yt-dlp_linux_aarch64' : 'yt-dlp_linux') : 'yt-dlp');
     const targetPath = path.join(os.tmpdir(), assetName);
     const nightlyUrl = `https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/${assetName}`;
     const stableUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
