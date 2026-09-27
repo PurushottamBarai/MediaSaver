@@ -100,6 +100,12 @@ const formatAndLogStderr = (fnName, url, error) => {
     ? error.stderr.trim()
     : error.shortMessage || error.message || String(error);
   const exitCode = error.exitCode ?? error.code ?? "N/A";
+  if (stderrDetails.includes('[youtube]') && stderrDetails.includes('Sign in to confirm')) {
+    process.stdout.write(
+      `[ytdlpService] Embedded YouTube video detected in external post (${url}). Routing to Tier 1 YouTube engine...\n`,
+    );
+    return;
+  }
   process.stderr.write(
     `[yt-dlp error] ${fnName} failed for URL: ${url} (ExitCode: ${exitCode})\n[yt-dlp stderr]: ${stderrDetails}\n`,
   );

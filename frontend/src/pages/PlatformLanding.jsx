@@ -41,7 +41,7 @@ const PlatformLanding = ({
     const webAppSchema = {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": `${platformName} Downloader - URL2Vid`,
+      "name": `${platformName} Downloader - mediasaver`,
       "description": metaDescription,
       "applicationCategory": "MultimediaApplication",
       "operatingSystem": "Any",

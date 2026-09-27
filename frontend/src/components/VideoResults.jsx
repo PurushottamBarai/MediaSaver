@@ -62,8 +62,19 @@ const formatLabel = (fmt, durationSec, topFilesize) => {
 
 const VideoResults = React.memo(({ data, originalUrl, initialFormat = 'video' }) => {
   const { t } = useLanguage();
+
+  const topVideoFormat = useMemo(() => {
+    if (!data?.formats || !Array.isArray(data.formats)) return null;
+    return data.formats.find((f) => f.filesize && f.hasVideo) || data.formats[0];
+  }, [data?.formats]);
+
+  const availableVideoFormats = useMemo(() => {
+    if (!data?.formats || !Array.isArray(data.formats)) return [];
+    return data.formats.filter((fmt) => fmt.hasVideo !== false);
+  }, [data?.formats]);
+
   const isAudio = initialFormat === 'audio' || data?.platform === 'spotify' || data?.platform === 'applemusic' || data?.platform === 'youtubemusic' || data?.platform === 'soundcloud';
-  const [selectedFormat, setSelectedFormat] = useState(isAudio ? '192k' : 'best');
+  const [selectedFormat, setSelectedFormat] = useState(isAudio ? '192k' : (topVideoFormat?.formatId || 'best'));
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingTrackId, setDownloadingTrackId] = useState(null);
   const [playingTrackId, setPlayingTrackId] = useState(null);
@@ -74,7 +85,7 @@ const VideoResults = React.memo(({ data, originalUrl, initialFormat = 'video' })
   const downloadAllCancelRef = useRef(false);
   const downloadAllActiveRef = useRef(false);
 
-  useEffect(() => { setSelectedFormat(isAudio ? '192k' : 'best'); }, [isAudio]);
+  useEffect(() => { setSelectedFormat(isAudio ? '192k' : (topVideoFormat?.formatId || 'best')); }, [isAudio, topVideoFormat]);
 
   useEffect(() => {
     return () => {
@@ -87,16 +98,6 @@ const VideoResults = React.memo(({ data, originalUrl, initialFormat = 'video' })
   if (!data) return null;
 
   const isCollection = Boolean(data.isCollection && Array.isArray(data.tracks) && data.tracks.length > 0);
-
-  const topVideoFormat = useMemo(() => {
-    if (!data.formats || !Array.isArray(data.formats)) return null;
-    return data.formats.find((f) => f.filesize && f.hasVideo) || data.formats[0];
-  }, [data.formats]);
-
-  const availableVideoFormats = useMemo(() => {
-    if (!data.formats || !Array.isArray(data.formats)) return [];
-    return data.formats.filter((fmt) => fmt.hasVideo !== false);
-  }, [data.formats]);
 
   const formattedDuration = useMemo(() => formatDuration(data.duration), [data.duration]);
 
@@ -269,14 +270,15 @@ const VideoResults = React.memo(({ data, originalUrl, initialFormat = 'video' })
                   {isAudio ? audioOptions.map((opt) => (
                     <option key={opt.id} value={opt.id} className="bg-surface">{opt.displayLabel}</option>
                   )) : (
-                    <>
-                      <option value="best" className="bg-surface">{defaultVideoOptionLabel}</option>
-                      {availableVideoFormats.map((fmt, idx) => (
+                    availableVideoFormats.length > 0 ? (
+                      availableVideoFormats.map((fmt, idx) => (
                         <option key={fmt.formatId || fmt.url || `${fmt.resolution}-${fmt.ext}-${idx}`} value={fmt.formatId} className="bg-surface">
                           {formatLabel(fmt, data.duration, topVideoFormat?.filesize)}
                         </option>
-                      ))}
-                    </>
+                      ))
+                    ) : (
+                      <option value="best" className="bg-surface">{defaultVideoOptionLabel}</option>
+                    )
                   )}
                 </select>
                 <ChevronDown className="absolute right-3 top-4 w-4 h-4 text-text-secondary pointer-events-none" />

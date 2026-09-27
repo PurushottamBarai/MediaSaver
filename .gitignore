@@ -1,25 +1,56 @@
+# Dependencies
 node_modules/
+/.pnp
+.pnp.js
 
+# Environment variables & secrets
 .env*
 *.env
+!.env.example
+cookies.txt
 backend/cookies.txt
 
+# Production builds & caches
 dist/
+dist-ssr/
 build/
 coverage/
+.cache/
 
+# Temporary and scratch files
 tmp/
+temp/
 backend/tmp/
 backend/temp/
-*.log
-*.mp4
+scratch/
+scratch_*
+*.tmp
 
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Media files
+*.mp4
+*.temp.mp4
+*.m4a
+*.webm
+*.part
+*.ytdl
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
+ehthumbs.db
+
+# IDE & Editor files
 .vscode/
 .idea/
 *.swp
-
-find_cobalt.js
-test_urls.mjs
-scratch_*
+*.swo
+*~

@@ -1,7 +1,7 @@
 {
-  "name": "url2vid",
+  "name": "mediasaver",
   "version": "1.0.0",
-  "description": "Unified build script for URL2Vid",
+  "description": "Unified build script for mediasaver",
   "scripts": {
     "install-all": "npm install --prefix frontend && npm install --prefix backend",
     "build": "(pip install -U \"yt-dlp[curl-cffi]\" 2>/dev/null || python3 -m pip install -U \"yt-dlp[curl-cffi]\" 2>/dev/null || true) && npm run install-all && npm run build --prefix frontend",

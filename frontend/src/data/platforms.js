@@ -7,7 +7,7 @@ export const platformsData = [
     description: "Our YouTube downloader seamlessly handles standard watch URLs, youtu.be shorteners, and vertical YouTube Shorts links. It parses the adaptive video and audio streams directly from YouTube's media servers, allowing you to select resolutions up to 1080p Full HD or convert the audio track straight into high-bitrate MP3 format. The extraction engine automatically bypasses client restrictions without requiring third-party browser extensions.",
     steps: [
       { title: 'Copy the YouTube link', desc: 'Open the YouTube video or Short, click the "Share" button beneath the player, and tap "Copy link".' },
-      { title: 'Paste into URL2Vid', desc: 'Come back to this page, paste the copied link into the input box above, and click "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Come back to this page, paste the copied link into the input box above, and click "Extract".' },
       { title: 'Download your video', desc: 'Select your preferred video quality (e.g., 1080p, 720p) or audio format, and download the file.' }
     ],
     faqs: [
@@ -17,7 +17,7 @@ export const platformsData = [
       { question: 'Can I download age-restricted videos?', answer: 'Currently, we only support downloading publicly available videos that do not require an account login to view.' },
       { question: 'Can I convert YouTube videos to MP3?', answer: 'Yes! Select the "Audio (MP3)" option from the format dropdown before clicking Extract.' }
     ],
-    metaTitle: 'YouTube Video Downloader: Download Videos & Shorts Free | URL2Vid',
+    metaTitle: 'YouTube Video Downloader: Download Videos & Shorts Free | mediasaver',
     metaDescription: 'Free, fast YouTube video downloader. Save YouTube videos and Shorts in HD MP4 or MP3 format directly to your phone or PC without installing any software.'
   },
   {
@@ -25,10 +25,10 @@ export const platformsData = [
     platformName: 'Instagram',
     h1: 'Instagram Video Downloader: Save IG Reels & Posts',
     intro: 'Download Instagram videos, Reels, and IGTV posts in high quality with our free online tool. No need to log in or install an app—just paste the IG link and save the MP4 instantly.',
-    description: "Downloading Instagram Reels and video posts requires resolving short-lived CDN media tokens without triggering Instagram's login walls. URL2Vid queries the public post endpoints to extract the pristine, uncompressed MP4 source file directly from Meta's content delivery servers. The resulting video retains original sound, color grading, and framing with zero added watermarks or compression loss.",
+    description: "Downloading Instagram Reels and video posts requires resolving short-lived CDN media tokens without triggering Instagram's login walls. mediasaver queries the public post endpoints to extract the pristine, uncompressed MP4 source file directly from Meta's content delivery servers. The resulting video retains original sound, color grading, and framing with zero added watermarks or compression loss.",
     steps: [
       { title: 'Copy the Instagram link', desc: 'Open the Instagram app, find the Reel or video post, tap the three dots or share icon, and select "Copy link".' },
-      { title: 'Paste the link here', desc: 'Return to URL2Vid, paste the Instagram URL into the box at the top of the page, and press "Extract".' },
+      { title: 'Paste the link here', desc: 'Return to mediasaver, paste the Instagram URL into the box at the top of the page, and press "Extract".' },
       { title: 'Save to your device', desc: 'Click the download button to save the MP4 video directly to your camera roll or computer.' }
     ],
     faqs: [
@@ -37,7 +37,7 @@ export const platformsData = [
       { question: 'Does this work for Instagram Stories?', answer: 'Currently, we specialize in downloading permanent video posts and Reels, not temporary 24-hour Stories.' },
       { question: 'Will the downloaded video have a watermark?', answer: 'No! The video will be downloaded exactly as it appears on Instagram, without any added watermarks.' }
     ],
-    metaTitle: 'Instagram Video Downloader: Save Reels & Posts Free | URL2Vid',
+    metaTitle: 'Instagram Video Downloader: Save Reels & Posts Free | mediasaver',
     metaDescription: 'Download Instagram Reels, IGTV, and video posts quickly and anonymously. Free Instagram video downloader with no watermarks or app installation required.'
   },
   {
@@ -45,7 +45,7 @@ export const platformsData = [
     platformName: 'Facebook',
     h1: 'Facebook Video Downloader: Save FB Videos & Reels',
     intro: 'Easily download Facebook videos, Watch clips, and FB Reels. Whether it is a viral meme or a tutorial, our tool helps you save Facebook MP4 videos in HD without an account.',
-    description: "Facebook videos are distributed across varied URL formats, including fb.watch shortcuts, Watch feeds, and vertical Facebook Reels. URL2Vid follows Facebook's redirection hops and decodes the manifest to offer both HD and SD MP4 streams for download. You can save public group videos, page clips, and user shares directly to your device without connecting a Facebook account.",
+    description: "Facebook videos are distributed across varied URL formats, including fb.watch shortcuts, Watch feeds, and vertical Facebook Reels. mediasaver follows Facebook's redirection hops and decodes the manifest to offer both HD and SD MP4 streams for download. You can save public group videos, page clips, and user shares directly to your device without connecting a Facebook account.",
     steps: [
       { title: 'Copy the Facebook link', desc: 'On Facebook, click "Share" beneath the video or Reel, then select "Copy Link".' },
       { title: 'Paste the URL', desc: 'Come back to our downloader, paste the Facebook video link in the input field, and click "Extract".' },
@@ -57,7 +57,7 @@ export const platformsData = [
       { question: 'Does this support Facebook Reels?', answer: 'Yes, you can paste the link to any public Facebook Reel and download it just like a regular video.' },
       { question: 'Are there any limits on downloads?', answer: 'No, you can use our Facebook video downloader as many times as you want for free.' }
     ],
-    metaTitle: 'Facebook Video Downloader: Save FB Videos & Reels | URL2Vid',
+    metaTitle: 'Facebook Video Downloader: Save FB Videos & Reels | mediasaver',
     metaDescription: 'Download Facebook videos and Reels for free. Save HD Facebook MP4 videos to your phone or PC instantly with our fast online downloader.'
   },
   {
@@ -65,7 +65,7 @@ export const platformsData = [
     platformName: 'X (Twitter)',
     h1: 'X/Twitter Video Downloader: Save Tweets with Video',
     intro: 'Download videos and GIFs from X (formerly Twitter) directly to your device. Simply paste the tweet link to extract the MP4 video file in the highest available quality.',
-    description: 'X (formerly Twitter) encodes video uploads into multiple bitrate variants and wraps animated GIFs into looping MP4 containers. URL2Vid analyzes both twitter.com and x.com tweet status URLs, filters through the available rendition playlists, and serves the highest available bitrate MP4 file. You get crystal-clear video and crisp audio with no app installation necessary.',
+    description: 'X (formerly Twitter) encodes video uploads into multiple bitrate variants and wraps animated GIFs into looping MP4 containers. mediasaver analyzes both twitter.com and x.com tweet status URLs, filters through the available rendition playlists, and serves the highest available bitrate MP4 file. You get crystal-clear video and crisp audio with no app installation necessary.',
     steps: [
       { title: 'Copy the Tweet link', desc: 'Click the share icon on the tweet containing the video, and select "Copy link to Tweet".' },
       { title: 'Paste it above', desc: 'Paste the copied twitter.com or x.com link into the downloader input box and click "Extract".' },
@@ -77,7 +77,7 @@ export const platformsData = [
       { question: 'Can I download GIFs from Twitter?', answer: 'Yes! Twitter converts GIFs to video files (MP4), so you can download them just like regular videos.' },
       { question: 'Do I need to install an app?', answer: 'No, our downloader is entirely web-based and works in any browser.' }
     ],
-    metaTitle: 'Twitter Video Downloader: Save X/Twitter Videos Free | URL2Vid',
+    metaTitle: 'Twitter Video Downloader: Save X/Twitter Videos Free | mediasaver',
     metaDescription: 'Free X (Twitter) video downloader. Save videos and GIFs from tweets quickly and easily in high quality MP4 format.'
   },
   {
@@ -85,10 +85,10 @@ export const platformsData = [
     platformName: 'Pinterest',
     h1: 'Pinterest Video Downloader: Save Video Pins',
     intro: 'Download video Pins from Pinterest for offline viewing or inspiration. Our free Pinterest video downloader extracts high-quality MP4s instantly, without needing a Pinterest account.',
-    description: 'Pinterest video Pins, animated DIY guides, and Idea Pins are streamed using segmented HLS playlists that standard browser downloaders cannot capture. URL2Vid fetches the underlying media manifest and stitches the video fragments into a complete, high-definition MP4 file. This makes saving craft tutorials, recipes, and design inspiration for offline reference fast and seamless.',
+    description: 'Pinterest video Pins, animated DIY guides, and Idea Pins are streamed using segmented HLS playlists that standard browser downloaders cannot capture. mediasaver fetches the underlying media manifest and stitches the video fragments into a complete, high-definition MP4 file. This makes saving craft tutorials, recipes, and design inspiration for offline reference fast and seamless.',
     steps: [
       { title: 'Copy the Pin link', desc: 'Open the Pinterest app or website, click the share icon on the video Pin, and choose "Copy link".' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the Pin URL into the search box on this page and hit "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the Pin URL into the search box on this page and hit "Extract".' },
       { title: 'Download your Pin', desc: 'Choose your desired video quality from the list and download the MP4 straight to your device.' }
     ],
     faqs: [
@@ -97,7 +97,7 @@ export const platformsData = [
       { question: 'Do I need to log in to Pinterest?', answer: 'No, you do not need a Pinterest account to download public video Pins using our service.' },
       { question: 'Are Idea Pins supported?', answer: 'Yes, as long as the Idea Pin contains video content and is public, our tool can extract it.' }
     ],
-    metaTitle: 'Pinterest Video Downloader: Save Video Pins Free | URL2Vid',
+    metaTitle: 'Pinterest Video Downloader: Save Video Pins Free | mediasaver',
     metaDescription: 'Download Pinterest video Pins in high quality for free. Fast, no-login Pinterest video downloader for mobile and desktop.'
   },
   {
@@ -105,19 +105,19 @@ export const platformsData = [
     platformName: 'Reddit',
     h1: 'Reddit Video Downloader: Save Reddit Videos with Sound Free',
     intro: 'Download Reddit videos with audio intact. Our online Reddit video downloader works with comments links, short links, and v.redd.it links, giving you clean MP4 videos with sound.',
-    description: 'Reddit serves user uploads via separated DASH video and audio streams under v.redd.it, which causes standard browser downloads to have no audio. URL2Vid automatically resolves all Reddit post links, new mobile share-links (reddit.com/r/.../s/...), and legacy old.reddit URLs. It downloads both the high-definition video track and audio track, merging them on the fly into a synchronized MP4 file with full sound.',
+    description: 'Reddit serves user uploads via separated DASH video and audio streams under v.redd.it, which causes standard browser downloads to have no audio. mediasaver automatically resolves all Reddit post links, new mobile share-links (reddit.com/r/.../s/...), and legacy old.reddit URLs. It downloads both the high-definition video track and audio track, merging them on the fly into a synchronized MP4 file with full sound.',
     steps: [
       { title: 'Copy the Reddit post link', desc: 'Click the "Share" button beneath the Reddit post containing the video, and select "Copy link".' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the Reddit link into the search box on this page and click "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the Reddit link into the search box on this page and click "Extract".' },
       { title: 'Download with sound', desc: 'Select your preferred video resolution and download your Reddit video with synced audio.' }
     ],
     faqs: [
       { question: 'Are Reddit downloaders illegal?', answer: 'They are not illegal. Because, we do not crack the DRM protection of Reddit files. We just fetch the video info from their web-API and use public streaming sources to get the mp4 files.' },
       { question: 'Do downloaded Reddit videos have sound?', answer: 'Yes! Our tool automatically merges the video and audio streams so your downloaded MP4 has full sound.' },
       { question: 'Can I download Reddit short links (s/)?', answer: 'Yes, our resolver seamlessly handles both standard reddit.com post URLs and new mobile app share links.' },
-      { question: 'Is it free to use?', answer: 'Yes, URL2Vid is completely free with no registration or download caps.' }
+      { question: 'Is it free to use?', answer: 'Yes, mediasaver is completely free with no registration or download caps.' }
     ],
-    metaTitle: 'Reddit Video Downloader: Save Reddit Videos with Audio Free | URL2Vid',
+    metaTitle: 'Reddit Video Downloader: Save Reddit Videos with Audio Free | mediasaver',
     metaDescription: 'Free Reddit video downloader with sound. Download Reddit videos and GIFs with synced audio in high quality MP4 format simply by pasting the post link.'
   },
   {
@@ -125,10 +125,10 @@ export const platformsData = [
     platformName: 'LinkedIn',
     h1: 'LinkedIn Video Downloader: Save LinkedIn Videos & Posts',
     intro: 'Easily download video posts, talks, keynote clips, and learning snippets from LinkedIn in HD quality. No account or login credentials required—just paste the post link.',
-    description: 'LinkedIn video posts, keynote presentations, and corporate tutorials are often shared using shortened lnkd.in redirect links. URL2Vid resolves these redirects, bypasses the professional network sign-in prompt, and extracts the progressive MP4 stream in full resolution. Perfect for saving executive interviews, industry panels, and educational talks directly to your storage for offline study.',
+    description: 'LinkedIn video posts, keynote presentations, and corporate tutorials are often shared using shortened lnkd.in redirect links. mediasaver resolves these redirects, bypasses the professional network sign-in prompt, and extracts the progressive MP4 stream in full resolution. Perfect for saving executive interviews, industry panels, and educational talks directly to your storage for offline study.',
     steps: [
       { title: 'Copy the LinkedIn post link', desc: 'Click the three dots on the top right of the LinkedIn post and choose "Copy link to post".' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the LinkedIn URL into the input field above and hit "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the LinkedIn URL into the input field above and hit "Extract".' },
       { title: 'Save your video', desc: 'Click the download button to save the MP4 video directly to your computer or phone.' }
     ],
     faqs: [
@@ -137,7 +137,7 @@ export const platformsData = [
       { question: 'Can I download private LinkedIn videos?', answer: 'No, we only support publicly visible LinkedIn video posts.' },
       { question: 'Do I need to sign in with LinkedIn?', answer: 'No, you never need to connect or log in with your LinkedIn account.' }
     ],
-    metaTitle: 'LinkedIn Video Downloader: Save LinkedIn Videos Free | URL2Vid',
+    metaTitle: 'LinkedIn Video Downloader: Save LinkedIn Videos Free | mediasaver',
     metaDescription: 'Free LinkedIn video downloader. Save business presentations, talks, and video posts from LinkedIn as MP4 files quickly and without logging in.'
   },
   {
@@ -145,7 +145,7 @@ export const platformsData = [
     platformName: 'Snapchat',
     h1: 'Snapchat Spotlight Downloader: Save Public Snapchat Videos',
     intro: 'Download public Snapchat Spotlight videos in crisp MP4 format without watermarks. Fast, secure, and works directly in your web browser on mobile or desktop.',
-    description: 'Snapchat Spotlight features short-form vertical videos distributed through temporary secure CDN endpoints. URL2Vid inspects public Spotlight sharing links, parses the original media asset, and delivers a clean MP4 file without any platform logos or overlay stamps. You can easily archive your favorite community highlights directly to your phone\'s camera roll or desktop drive.',
+    description: 'Snapchat Spotlight features short-form vertical videos distributed through temporary secure CDN endpoints. mediasaver inspects public Spotlight sharing links, parses the original media asset, and delivers a clean MP4 file without any platform logos or overlay stamps. You can easily archive your favorite community highlights directly to your phone\'s camera roll or desktop drive.',
     steps: [
       { title: 'Copy the Spotlight link', desc: 'On Snapchat, tap the share icon on the Spotlight video and select "Copy link".' },
       { title: 'Paste into the downloader', desc: 'Paste the Snapchat link into the box above and click "Extract".' },
@@ -154,10 +154,10 @@ export const platformsData = [
     faqs: [
       { question: 'Are Snapchat downloaders illegal?', answer: 'They are not illegal. Because, we do not crack the DRM protection of Snapchat files. We just fetch the video info from their web-API and use public streaming sources to get the mp4 files.' },
       { question: 'Can I download private Snaps or Stories?', answer: 'No, our tool is strictly for publicly shared Snapchat Spotlight videos.' },
-      { question: 'Does URL2Vid add a watermark?', answer: 'No, downloaded videos are saved as close to the original source quality as possible without added watermarks.' },
+      { question: 'Does mediasaver add a watermark?', answer: 'No, downloaded videos are saved as close to the original source quality as possible without added watermarks.' },
       { question: 'Does this work on mobile?', answer: 'Yes, it works smoothly in Safari, Chrome, and all mobile browsers.' }
     ],
-    metaTitle: 'Snapchat Spotlight Downloader: Download Snapchat Videos Free | URL2Vid',
+    metaTitle: 'Snapchat Spotlight Downloader: Download Snapchat Videos Free | mediasaver',
     metaDescription: 'Download public Snapchat Spotlight videos for free in high definition MP4 format. Fast, online, and no account or app required.'
   },
   {
@@ -165,7 +165,7 @@ export const platformsData = [
     platformName: 'Threads',
     h1: 'Threads Video Downloader: Save Videos from Meta Threads',
     intro: 'Save videos and clips from Instagram Threads in high-definition MP4. Easily download clips from threads.net and threads.com without logging in or installing third-party apps.',
-    description: 'Meta Threads platform hosts videos and short clips across both threads.net and threads.com domain routes. URL2Vid connects directly to the public Threads post metadata to fetch the highest quality progressive MP4 video available. Download humor clips, tech updates, and sports highlights cleanly without logging in or installing secondary apps.',
+    description: 'Meta Threads platform hosts videos and short clips across both threads.net and threads.com domain routes. mediasaver connects directly to the public Threads post metadata to fetch the highest quality progressive MP4 video available. Download humor clips, tech updates, and sports highlights cleanly without logging in or installing secondary apps.',
     steps: [
       { title: 'Copy the Threads link', desc: 'Tap the share or paper plane icon on the Threads post and select "Copy link".' },
       { title: 'Paste above', desc: 'Paste the Threads post URL into our downloader and press "Extract".' },
@@ -177,7 +177,7 @@ export const platformsData = [
       { question: 'Do I need a Threads account?', answer: 'No, you do not need an account or login to download public Threads videos.' },
       { question: 'Are videos saved in HD?', answer: 'Yes, videos are fetched in the highest resolution made available by Threads.' }
     ],
-    metaTitle: 'Threads Video Downloader: Save Threads Videos Free | URL2Vid',
+    metaTitle: 'Threads Video Downloader: Save Threads Videos Free | mediasaver',
     metaDescription: 'Free Threads video downloader. Download videos from Threads by Meta quickly and without watermarks in high quality MP4 format.'
   },
   {
@@ -185,10 +185,10 @@ export const platformsData = [
     platformName: 'Vimeo',
     h1: 'Vimeo Video Downloader: Download Vimeo Videos in HD',
     intro: 'Download high-definition videos from Vimeo directly to your PC, Mac, iPhone, or Android device. Choose between 1080p, 720p, or extract MP3 audio effortlessly.',
-    description: 'Vimeo is renowned for hosting high-bitrate artistic, documentary, and indie film productions. URL2Vid queries Vimeo player config to present all available resolutions—from 360p up to pristine 1080p Full HD—as well as dedicated MP3 audio extraction. Every file is downloaded directly from Vimeo origin servers, ensuring pristine video fidelity and synchronized audio.',
+    description: 'Vimeo is renowned for hosting high-bitrate artistic, documentary, and indie film productions. mediasaver queries Vimeo player config to present all available resolutions—from 360p up to pristine 1080p Full HD—as well as dedicated MP3 audio extraction. Every file is downloaded directly from Vimeo origin servers, ensuring pristine video fidelity and synchronized audio.',
     steps: [
       { title: 'Copy the Vimeo link', desc: 'Copy the Vimeo video URL from your browser address bar or share sheet.' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the Vimeo video link into the box above and click "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the Vimeo video link into the box above and click "Extract".' },
       { title: 'Save your file', desc: 'Select your preferred resolution or audio format and download instantly.' }
     ],
     faqs: [
@@ -197,7 +197,7 @@ export const platformsData = [
       { question: 'Can I extract audio only from Vimeo?', answer: 'Yes! Select the "Audio (MP3)" option to extract sound from Vimeo videos.' },
       { question: 'Is there a file size limit?', answer: 'Most standard Vimeo videos download within seconds without arbitrary file size caps.' }
     ],
-    metaTitle: 'Vimeo Video Downloader: Download High Quality Vimeo Videos | URL2Vid',
+    metaTitle: 'Vimeo Video Downloader: Download High Quality Vimeo Videos | mediasaver',
     metaDescription: 'Download Vimeo videos in HD 1080p or 720p MP4 format for free. Simple online Vimeo video downloader with no registration needed.'
   },
   {
@@ -205,19 +205,19 @@ export const platformsData = [
     platformName: 'Twitch',
     h1: 'Twitch Clip Downloader: Save Twitch Clips in High Quality',
     intro: 'Download memorable gaming highlights and Twitch broadcast clips in full 1080p or 720p MP4. Fast, free, and designed for streamers and fans alike.',
-    description: "Twitch clips captured from clips.twitch.tv or stream channel clip URLs are hosted as standalone highlight files on Twitch broadcast servers. URL2Vid extracts the direct video stream, providing standard 1080p or 720p 60fps MP4 files ready for instant saving. Ideal for gaming creators, esports fans, and editors looking to archive viral stream moments and reaction clips.",
+    description: "Twitch clips captured from clips.twitch.tv or stream channel clip URLs are hosted as standalone highlight files on Twitch broadcast servers. mediasaver extracts the direct video stream, providing standard 1080p or 720p 60fps MP4 files ready for instant saving. Ideal for gaming creators, esports fans, and editors looking to archive viral stream moments and reaction clips.",
     steps: [
       { title: 'Copy the Twitch clip link', desc: 'Click the share button on the Twitch clip and copy the clip link (clips.twitch.tv or twitch.tv/.../clip).' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the Twitch clip link into the search bar and click "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the Twitch clip link into the search bar and click "Extract".' },
       { title: 'Download clip', desc: 'Select your preferred video resolution and save the clip to your device.' }
     ],
     faqs: [
       { question: 'Are Twitch downloaders illegal?', answer: 'They are not illegal. Because, we do not crack the DRM protection of Twitch files. We just fetch the video info from their web-API and use public streaming sources to get the mp4 files.' },
       { question: 'Does this work for clips.twitch.tv links?', answer: 'Yes, both clips.twitch.tv and standard Twitch clip links work seamlessly.' },
       { question: 'Can I download full live streams?', answer: 'This tool is optimized for Twitch clips and highlights rather than multi-hour live VODs.' },
-      { question: 'Is this free?', answer: 'Yes, URL2Vid is 100% free with no hidden charges.' }
+      { question: 'Is this free?', answer: 'Yes, mediasaver is 100% free with no hidden charges.' }
     ],
-    metaTitle: 'Twitch Clip Downloader: Download Twitch Clips Free | URL2Vid',
+    metaTitle: 'Twitch Clip Downloader: Download Twitch Clips Free | mediasaver',
     metaDescription: 'Free online Twitch clip downloader. Save highlight clips from Twitch streams in high-definition MP4 directly to your PC or mobile.'
   },
   {
@@ -225,19 +225,19 @@ export const platformsData = [
     platformName: 'Dailymotion',
     h1: 'Dailymotion Video Downloader: Save Dailymotion Videos Free',
     intro: 'Download public Dailymotion videos, news clips, and shows in crystal-clear MP4 format. Save videos directly to your device without installing software.',
-    description: 'Dailymotion streams news reports, music videos, and sports broadcasts using dynamic multi-bitrate HTTP streams. URL2Vid inspects the stream manifest to identify the highest resolution available, compiling the segments into a single, clean MP4 video file. You can download and watch full-length videos offline on any device with no watermark or software installation required.',
+    description: 'Dailymotion streams news reports, music videos, and sports broadcasts using dynamic multi-bitrate HTTP streams. mediasaver inspects the stream manifest to identify the highest resolution available, compiling the segments into a single, clean MP4 video file. You can download and watch full-length videos offline on any device with no watermark or software installation required.',
     steps: [
       { title: 'Copy the Dailymotion link', desc: 'Open the Dailymotion video and copy its URL from the browser address bar or share icon.' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the link into the extraction input above and click "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the link into the extraction input above and click "Extract".' },
       { title: 'Download your video', desc: 'Pick your desired quality from the formats list and save the video.' }
     ],
     faqs: [
       { question: 'Are Dailymotion downloaders illegal?', answer: 'They are not illegal. Because, we do not crack the DRM protection of Dailymotion files. We just fetch the video info from their web-API and use public streaming sources to get the mp4 files.' },
-      { question: 'Does this work on mobile devices?', answer: 'Yes, URL2Vid works on iOS, Android, macOS, and Windows browsers.' },
-      { question: 'Does URL2Vid add watermarks?', answer: 'Never. Your downloaded video is clean, exactly as published.' },
+      { question: 'Does this work on mobile devices?', answer: 'Yes, mediasaver works on iOS, Android, macOS, and Windows browsers.' },
+      { question: 'Does mediasaver add watermarks?', answer: 'Never. Your downloaded video is clean, exactly as published.' },
       { question: 'Do I need to sign up?', answer: 'No account, login, or registration is required.' }
     ],
-    metaTitle: 'Dailymotion Video Downloader: Download Dailymotion Videos | URL2Vid',
+    metaTitle: 'Dailymotion Video Downloader: Download Dailymotion Videos | mediasaver',
     metaDescription: 'Fast, free Dailymotion video downloader. Download Dailymotion videos in MP4 format without registration or added watermarks.'
   },
   {
@@ -249,7 +249,7 @@ export const platformsData = [
     description: 'Our Spotify music downloader allows you to save your favorite songs, playlists, and albums directly to your computer, iPhone, or Android device. Simply paste any open.spotify.com or spotify.link URL to fetch high-resolution album artwork, artist details, track duration, and full audio streams. The conversion engine delivers 320kbps, 256kbps, 192kbps, and 128kbps MP3 files with complete ID3 tags for your offline music library.',
     steps: [
       { title: 'Copy the Spotify link', desc: 'Open Spotify, tap the three dots on any song, album, or playlist, click "Share", and select "Copy Link".' },
-      { title: 'Paste into URL2Vid', desc: 'Paste your Spotify link into the input box above and click the "Extract" button.' },
+      { title: 'Paste into mediasaver', desc: 'Paste your Spotify link into the input box above and click the "Extract" button.' },
       { title: 'Download MP3 file', desc: 'Select your preferred audio bitrate (320 kbps, 256 kbps, 192 kbps, or 128 kbps) and save the MP3 audio file.' }
     ],
     faqs: [
@@ -259,7 +259,7 @@ export const platformsData = [
       { question: 'What audio quality will I get?', answer: 'You can choose between multiple MP3 bitrates up to 320kbps for pristine high-fidelity audio.' },
       { question: 'Does this work on mobile devices?', answer: 'Yes, our online Spotify downloader works directly in Safari, Chrome, and any modern mobile or desktop browser.' }
     ],
-    metaTitle: 'Spotify Downloader: Download Spotify Songs & Playlists to MP3 Free | URL2Vid',
+    metaTitle: 'Spotify Downloader: Download Spotify Songs & Playlists to MP3 Free | mediasaver',
     metaDescription: 'Free online Spotify downloader to save tracks, albums, and playlists as high-quality 320kbps MP3 files. Fast, secure, and no Spotify Premium account needed.'
   },
   {
@@ -281,7 +281,7 @@ export const platformsData = [
       { question: 'Do I need an Apple ID or active subscription?', answer: 'No Apple ID, login, or subscription is required to use this tool.' },
       { question: 'What audio format is downloaded?', answer: 'All audio is converted and packaged into standard MP3 format compatible with every media player and phone.' }
     ],
-    metaTitle: 'Apple Music Downloader: Download Songs & Albums to MP3 | URL2Vid',
+    metaTitle: 'Apple Music Downloader: Download Songs & Albums to MP3 | mediasaver',
     metaDescription: 'Download Apple Music tracks and albums to 320kbps MP3 for free. No Apple Music subscription or iTunes required. Fast online Apple Music downloader.'
   },
   {
@@ -293,17 +293,17 @@ export const platformsData = [
     description: 'Our YouTube Music downloader provides lightning-fast audio extraction for songs, vertical music tracks, and full music playlists hosted on music.youtube.com. Powered by a direct CDN tunneling engine, audio downloads bypass buffering and transcode straight to high-fidelity MP3. Save entire playlists of up to 100 tracks in one session with complete artist and album metadata.',
     steps: [
       { title: 'Copy the YouTube Music URL', desc: 'Open music.youtube.com, navigate to the track or playlist, click "Share", and copy the link.' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the music.youtube.com URL into the search bar and press "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the music.youtube.com URL into the search bar and press "Extract".' },
       { title: 'Download high-quality MP3', desc: 'Select your preferred bitrate (up to 320 kbps) and click download to save the audio file.' }
     ],
     faqs: [
       { question: 'Are YouTube Music downloaders illegal?', answer: 'They are not illegal. Because, we do not crack the DRM protection of YouTube Music files. We just fetch the song info from their web-API and use alternate music sources to get the mp3 files.' },
       { question: 'Can I download YouTube Music playlists?', answer: 'Yes, enter any YouTube Music playlist link to browse all tracks and download them individually or consecutively.' },
       { question: 'Does this work with music.youtube.com URLs?', answer: 'Yes, both music.youtube.com and standard youtube.com music URLs are fully supported.' },
-      { question: 'Is YouTube Music download free?', answer: 'Yes, URL2Vid is completely free with unlimited downloads and no account required.' },
+      { question: 'Is YouTube Music download free?', answer: 'Yes, mediasaver is completely free with unlimited downloads and no account required.' },
       { question: 'Can I download audio on mobile?', answer: 'Yes, works seamlessly on iOS Safari, Android Chrome, and all desktop browsers.' }
     ],
-    metaTitle: 'YouTube Music Downloader: Download YT Music to MP3 Free | URL2Vid',
+    metaTitle: 'YouTube Music Downloader: Download YT Music to MP3 Free | mediasaver',
     metaDescription: 'Free YouTube Music downloader to save songs, albums, and playlists to high-quality MP3 audio. Fast, ad-free conversion with no app installation needed.'
   },
   {
@@ -312,10 +312,10 @@ export const platformsData = [
     isMusic: true,
     h1: 'SoundCloud Downloader: Download SoundCloud Songs & Playlists to MP3',
     intro: 'Download your favorite SoundCloud tracks, remixes, sets, and podcasts in 320kbps MP3 format. Supports standard soundcloud.com links as well as on.soundcloud.com short URLs.',
-    description: 'SoundCloud is the home of independent artists, underground mixtapes, DJ sets, and exclusive audio tracks. Our SoundCloud downloader extracts audio streams directly from SoundCloud servers, converting HLS and progressive audio into pristine MP3 files. Whether you are downloading a single underground release or an entire playlist, URL2Vid preserves high-definition sound with embedded cover art and zero quality degradation.',
+    description: 'SoundCloud is the home of independent artists, underground mixtapes, DJ sets, and exclusive audio tracks. Our SoundCloud downloader extracts audio streams directly from SoundCloud servers, converting HLS and progressive audio into pristine MP3 files. Whether you are downloading a single underground release or an entire playlist, mediasaver preserves high-definition sound with embedded cover art and zero quality degradation.',
     steps: [
       { title: 'Copy the SoundCloud link', desc: 'Open SoundCloud, click "Share" on any track or set, and copy the link (both soundcloud.com and on.soundcloud.com supported).' },
-      { title: 'Paste into URL2Vid', desc: 'Paste the SoundCloud URL into the extraction field above and click "Extract".' },
+      { title: 'Paste into mediasaver', desc: 'Paste the SoundCloud URL into the extraction field above and click "Extract".' },
       { title: 'Download your MP3 track', desc: 'Select your preferred quality from 128 kbps to 320 kbps and save the file instantly.' }
     ],
     faqs: [
@@ -325,7 +325,7 @@ export const platformsData = [
       { question: 'Do I need a SoundCloud Go+ subscription?', answer: 'No subscription or SoundCloud account is needed. All public tracks are completely free to download.' },
       { question: 'What quality audio do I get?', answer: 'We convert the original SoundCloud audio stream into high-bitrate MP3 up to 320kbps.' }
     ],
-    metaTitle: 'SoundCloud Downloader: Download SoundCloud to 320kbps MP3 Free | URL2Vid',
+    metaTitle: 'SoundCloud Downloader: Download SoundCloud to 320kbps MP3 Free | mediasaver',
     metaDescription: 'Download SoundCloud tracks, remixes, and playlists to high-quality MP3 for free. Supports on.soundcloud.com short links with no registration required.'
   }
 ];

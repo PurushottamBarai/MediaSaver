@@ -1,7 +1,34 @@
-node_modules
-dist
-.env
-.DS_Store
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+dist-ssr/
+coverage/
+
+# Environment files
+.env*
+*.env
+!.env.example
 *.local
-.vscode
-.idea
+
+# Scratch and temp files
+scratch/
+scratch_*
+*.tmp
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# System & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

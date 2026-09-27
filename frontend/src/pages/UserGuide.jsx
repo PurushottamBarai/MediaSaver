@@ -5,8 +5,8 @@ import VideoGuide from '../components/VideoGuide';
 import HowItWorks from '../components/HowItWorks';
 import FAQ from '../components/FAQ';
 
-const USER_GUIDE_TITLE = 'User Guide: How to Download Videos with URL2Vid | Step-by-Step Tutorial';
-const USER_GUIDE_DESCRIPTION = 'Watch our step-by-step video guide on how to download videos and audio from any supported social media platform with URL2Vid.';
+const USER_GUIDE_TITLE = 'User Guide: How to Download Videos with mediasaver | Step-by-Step Tutorial';
+const USER_GUIDE_DESCRIPTION = 'Watch our step-by-step video guide on how to download videos and audio from any supported social media platform with mediasaver.';
 
 export default function UserGuide() {
   return (
@@ -19,7 +19,7 @@ export default function UserGuide() {
 
       <div className="w-full max-w-3xl mx-auto text-center mb-4">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary tracking-tight mb-4">
-          URL2Vid User Guide
+          mediasaver User Guide
         </h1>
         <p className="text-text-secondary text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
           Learn how to extract and download high-quality videos and audio from YouTube, Instagram, Facebook, Reddit, and more in seconds.

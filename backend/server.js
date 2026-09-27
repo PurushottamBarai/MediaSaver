@@ -72,7 +72,7 @@ const updateYtDlpBinary = async () => {
     process.stdout.write(`[yt-dlp] Downloading latest nightly binary to ${targetPath}...\n`);
 
     let binaryRes = await fetch(nightlyUrl, {
-      headers: { 'User-Agent': 'URL2Vid/1.0' },
+      headers: { 'User-Agent': 'mediasaver/1.0' },
       redirect: 'follow',
       signal: AbortSignal.timeout(60000),
     });
@@ -80,7 +80,7 @@ const updateYtDlpBinary = async () => {
     if (!binaryRes.ok) {
       process.stdout.write(`[yt-dlp] Nightly build download returned HTTP ${binaryRes.status}, falling back to stable...\n`);
       binaryRes = await fetch(stableUrl, {
-        headers: { 'User-Agent': 'URL2Vid/1.0' },
+        headers: { 'User-Agent': 'mediasaver/1.0' },
         redirect: 'follow',
         signal: AbortSignal.timeout(60000),
       });
@@ -107,8 +107,8 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 const defaultAllowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3001',
-  'https://url2vid.onrender.com',
-  'https://url2vid.codedeck.me',
+  'https://mediasaver.onrender.com',
+  'https://mediasaver.codedeck.me',
 ];
 
 const envOrigins = process.env.ALLOWED_ORIGINS

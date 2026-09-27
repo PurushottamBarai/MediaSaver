@@ -3,8 +3,8 @@ import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
 import { Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
-const FEEDBACK_TITLE = 'Feedback - URL2Vid';
-const FEEDBACK_DESCRIPTION = 'Share your thoughts, feedback, or report issues to help us improve URL2Vid.';
+const FEEDBACK_TITLE = 'Feedback - mediasaver';
+const FEEDBACK_DESCRIPTION = 'Share your thoughts, feedback, or report issues to help us improve mediasaver.';
 
 export default function Feedback() {
   const [name, setName] = useState('');
@@ -65,7 +65,7 @@ export default function Feedback() {
           Feedback
         </h1>
         <p className="mt-3 text-white/80 text-sm sm:text-base max-w-lg mx-auto px-4">
-          We’d love to hear your thoughts, suggestions, or reports to make URL2Vid even better.
+          We’d love to hear your thoughts, suggestions, or reports to make mediasaver even better.
         </p>
 
         {/* Bottom subtle wave curve */}
@@ -91,7 +91,7 @@ export default function Feedback() {
               Thanks for your feedback!
             </h2>
             <p className="text-gray-600 text-sm mb-6">
-              Your message has been sent successfully. We appreciate you taking the time to help improve URL2Vid.
+              Your message has been sent successfully. We appreciate you taking the time to help improve mediasaver.
             </p>
             <button
               type="button"

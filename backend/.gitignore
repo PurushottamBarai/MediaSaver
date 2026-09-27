@@ -1,17 +1,37 @@
+# Dependencies
 node_modules/
-.env
 
+# Environment & secrets
+.env*
+*.env
+!.env.example
+cookies.txt
+
+# Temporary & scratch files
 tmp/
 temp/
-cookies.txt
-scratch_*.html
-scratch_*.js
+scratch/
+scratch_*
+*.tmp
 
+# Media & processing files
 *.mp4
 *.temp.mp4
 *.ts
+*.m4a
+*.webm
+*.part
+*.ytdl
 
+# Logs
 *.log
+npm-debug.log*
+
+# System & IDE files
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+*~

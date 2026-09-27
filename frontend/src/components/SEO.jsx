@@ -19,14 +19,14 @@ const SEO = ({ title, description, schema, canonicalPath }) => {
     setMetaTag('name', 'description', description);
     setMetaTag('property', 'og:title', title);
     setMetaTag('property', 'og:description', description);
-    setMetaTag('property', 'og:image', 'https://url2vid.codedeck.me/logo.png');
+    setMetaTag('property', 'og:image', 'https://mediasaver.codedeck.me/mediasaver-logo.png');
     setMetaTag('name', 'twitter:title', title);
     setMetaTag('name', 'twitter:description', description);
-    setMetaTag('name', 'twitter:image', 'https://url2vid.codedeck.me/logo.png');
+    setMetaTag('name', 'twitter:image', 'https://mediasaver.codedeck.me/mediasaver-logo.png');
 
     const path = canonicalPath || (typeof window !== 'undefined' ? window.location.pathname : '/');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    const canonicalUrl = `https://url2vid.codedeck.me${cleanPath === '/' ? '/' : cleanPath}`;
+    const canonicalUrl = `https://mediasaver.codedeck.me${cleanPath === '/' ? '/' : cleanPath}`;
 
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {

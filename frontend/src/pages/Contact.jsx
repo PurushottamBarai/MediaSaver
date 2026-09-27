@@ -2,7 +2,7 @@ import React from 'react';
 import SEO from '../components/SEO';
 import { useLanguage } from '../context/LanguageContext';
 
-const CONTACT_TITLE = 'Contact Us - URL2Vid';
+const CONTACT_TITLE = 'Contact Us - mediasaver';
 const CONTACT_DESCRIPTION = 'Have questions or need help? Contact us via contact@codedeck.me or purushottamx.in@gmail.com.';
 
 export default function Contact() {

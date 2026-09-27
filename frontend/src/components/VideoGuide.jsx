@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 const transcript = [
-  { time: "0:00", text: "URL2Vid is a versatile online tool that allows you to download videos from any social media platform. It extracts audio/video files directly from URLs, quickly and efficiently. Visit url2vid.codedeck.me" },
+  { time: "0:00", text: "mediasaver is a versatile online tool that allows you to download videos from any social media platform. It extracts audio/video files directly from URLs, quickly and efficiently. Visit mediasaver.codedeck.me" },
   { time: "0:16", text: "Input the URL of the video you want to download from a supported social media site." },
   { time: "0:22", text: "Choose the desired format of the file to download, then click extract, wait for moments." },
   { time: "0:28", text: "Once extraction completes, the video title and details become available for review." },
@@ -19,14 +19,14 @@ export default function VideoGuide() {
   return (
     <section id="video-guide" className="w-full max-w-3xl mx-auto my-12 px-4">
       <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-text-primary text-center sm:text-left">
-        How to Download Videos with URL2Vid | Step-by-Step Guide
+        How to Download Videos with mediasaver | Step-by-Step Guide
       </h2>
 
       <div className="relative w-full rounded-xl overflow-hidden shadow-md bg-surface border border-border aspect-video">
         <iframe
           loading="lazy"
           src="https://www.youtube.com/embed/ONIXO2fe948"
-          title="How to Download Videos with URL2Vid | Step-by-Step Guide"
+          title="How to Download Videos with mediasaver | Step-by-Step Guide"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
@@ -60,9 +60,9 @@ export default function VideoGuide() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "VideoObject",
-            name: "How to Download Videos with URL2Vid | Step-by-Step Guide",
+            name: "How to Download Videos with mediasaver | Step-by-Step Guide",
             description:
-              "Step-by-step guide showing how to use URL2Vid to download videos and audio from any social media platform.",
+              "Step-by-step guide showing how to use mediasaver to download videos and audio from any social media platform.",
             thumbnailUrl:
               "https://img.youtube.com/vi/ONIXO2fe948/maxresdefault.jpg",
             uploadDate: "2026-09-17T00:00:00+05:30",

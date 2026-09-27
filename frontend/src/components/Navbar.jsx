@@ -104,11 +104,11 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-base/90 border-b border-border transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group" aria-label="URL2Vid Home">
-          <div className="h-8 md:h-9 flex items-center justify-center">
+        <Link to="/" className="flex items-center gap-2 group" aria-label="mediasaver Home">
+          <div className="h-12 md:h-14 flex items-center justify-center">
             <img 
-              src="/logo.png" 
-              alt="URL2Vid Logo" 
+              src="/mediasaver-logo.png" 
+              alt="mediasaver Logo" 
               width="140" 
               height="36" 
               className="h-full w-auto object-contain transition-transform group-hover:scale-105" 

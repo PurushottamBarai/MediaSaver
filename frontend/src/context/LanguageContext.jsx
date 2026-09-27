@@ -37,11 +37,11 @@ const translations = {
 
 const languagesMap = {
   en: "English", es: "Español", pt: "Português", de: "Deutsch", fr: "Français",
-  tr: "Türkçe", hi: "हिन्दी", id: "Bahasa Indonesia", it: "Italiano", ja: "日本語",
+  tr: "Türkçe",  id: "Bahasa Indonesia", it: "Italiano", ja: "日本語",
   ru: "Русский", th: "ไทย", nl: "Nederlands", ar: "العربية", vi: "Tiếng Việt",
   ko: "한국어", pl: "Polski", fil: "Filipino", ms: "Bahasa Melayu", zh: "中文",
   bn: "বাংলা", el: "Ελληνικά", cs: "Čeština", ro: "Română", uk: "Українська",
-  mr: "मराठी", gu: "ગુજરાતી", ta: "தமிழ்", ml: "മലയാളം", pa: "ਪੰਜਾਬੀ"
+  hi: "हिन्दी", mr: "मराठी", gu: "ગુજરાતી", ta: "தமிழ்", ml: "മലയാളം", pa: "ਪੰਜਾਬੀ"
 };
 
 export const LANGUAGES = Object.entries(languagesMap).map(([code, label]) => ({

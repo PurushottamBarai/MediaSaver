@@ -34,10 +34,10 @@ async function prerender() {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       let html = await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML);
-      const canonicalUrl = `https://url2vid.codedeck.me${route === '/' ? '/' : route}`;
+      const canonicalUrl = `https://mediasaver.codedeck.me${route === '/' ? '/' : route}`;
       html = html.replace(/<link rel="canonical" href="[^"]*"/, `<link rel="canonical" href="${canonicalUrl}"`);
       html = html.replace(/<meta property="og:url" content="[^"]*"/, `<meta property="og:url" content="${canonicalUrl}"`);
-      html = html.replaceAll('https://url2vid.onrender.com', 'https://url2vid.codedeck.me');
+      html = html.replaceAll('https://mediasaver.onrender.com', 'https://mediasaver.codedeck.me');
       html = html.replaceAll(`http://localhost:${PORT}/`, '/');
       html = html.replaceAll(`http://localhost:${PORT}`, '');
 

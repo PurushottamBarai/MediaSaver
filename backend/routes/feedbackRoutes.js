@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `URL2Vid Feedback <${fromEmail.trim()}>`,
+        from: `mediasaver Feedback <${fromEmail.trim()}>`,
         to: [toEmail.trim()],
         subject: `Feedback from ${name.trim()}`,
         text: message.trim(),

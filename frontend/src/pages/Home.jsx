@@ -13,8 +13,8 @@ import FAQ, { homeFaqs } from '../components/FAQ';
 
 import SEO from '../components/SEO';
 
-const HOME_TITLE = 'URL2Vid: Download Videos & Music from Any URL | Free Downloader';
-const HOME_DESCRIPTION = 'Free online downloader for videos & music. Save from YouTube, Instagram, Facebook, Twitter (X), Spotify, Apple Music, SoundCloud & more — just paste a URL.';
+const HOME_TITLE = 'mediasaver: Download Videos & Music from Any URL | Free Downloader';
+const HOME_DESCRIPTION = 'Free online downloader for videos & music. Save from YouTube, Instagram, Facebook, Twitter (X), Spotify, Apple Music, SoundCloud & more - just paste a URL.';
 
 const Home = () => {
   const {
@@ -30,7 +30,7 @@ const Home = () => {
     const webAppSchema = {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "URL2Vid",
+      "name": "mediasaver",
       "description": HOME_DESCRIPTION,
       "applicationCategory": "MultimediaApplication",
       "operatingSystem": "Any",

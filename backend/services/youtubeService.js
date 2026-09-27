@@ -1,48 +1,38 @@
 import http from 'http';
 import https from 'https';
+import crypto from 'crypto';
 import { URL } from 'url';
 import { videoInfoCache } from '../utils/cache.js';
-import * as ytdlpService from './ytdlpService.js';
 
-// --- Tier 3: Invidious Pool Configuration ---
-const FALLBACK_INVIDIOUS_INSTANCES = [
-  'https://invidious.f5.si',
-  'https://invidious.nerdvpn.de',
-  'https://inv.nadeko.net',
-  'https://yt.chocolatemoo53.com',
-  'https://invidious.tiekoetter.com',
-  'https://inv.zzls.xyz',
-  'https://invidious.perennialte.ch',
-  'https://invidious.jing.rocks'
-];
+// --- Vidssave AES Decryptor (Tier 1 Engine) ---
+const VIDSSAVE_KEYS = ['4c9b7d2e'.repeat(3) + '4c9b7d21', 'rz18efAXUbdiaO7k'];
 
-let dynamicInvidiousPool = [...FALLBACK_INVIDIOUS_INSTANCES];
-let lastPoolRefreshTime = 0;
-
-const refreshInvidiousPool = async () => {
-  const now = Date.now();
-  if (now - lastPoolRefreshTime < 30 * 60 * 1000 && dynamicInvidiousPool.length > 0) {
-    return;
-  }
-  try {
-    const res = await fetch('https://api.invidious.io/instances.json', {
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      const online = data
-        .filter(([, info]) => info.type === 'https' && info.uri && (!info.monitor || !info.monitor.down))
-        .map(([, info]) => info.uri.replace(/\/$/, ''));
-      if (online.length > 0) {
-        dynamicInvidiousPool = ['https://invidious.f5.si', ...new Set([...FALLBACK_INVIDIOUS_INSTANCES, ...online])];
-        lastPoolRefreshTime = now;
+const decryptVidssave = (ciphertextB64) => {
+  if (!ciphertextB64 || typeof ciphertextB64 !== 'string') return null;
+  const ciphertextBuf = Buffer.from(ciphertextB64, 'base64');
+  for (const k of VIDSSAVE_KEYS) {
+    try {
+      const keyBuf = Buffer.from(k, 'utf8');
+      const ivBuf = Buffer.from(k.slice(0, 16), 'utf8');
+      const decipher = crypto.createDecipheriv(
+        keyBuf.length === 32 ? 'aes-256-cbc' : 'aes-128-cbc',
+        keyBuf,
+        ivBuf
+      );
+      decipher.setAutoPadding(false);
+      const decrypted = Buffer.concat([decipher.update(ciphertextBuf), decipher.final()]);
+      let end = decrypted.length;
+      while (end > 0 && decrypted[end - 1] === 0) end--;
+      const str = decrypted.slice(0, end).toString('utf8');
+      try {
+        return JSON.parse(str);
+      } catch {
+        return str;
       }
-    }
-  } catch {}
+    } catch {}
+  }
+  return null;
 };
-
-refreshInvidiousPool().catch(() => {});
 
 export const extractYouTubeId = (urlString) => {
   if (!urlString || typeof urlString !== 'string') return null;
@@ -55,7 +45,147 @@ export const extractYouTubeId = (urlString) => {
   return null;
 };
 
-// --- Tier 1: Y2Mate Direct Tunnel Streaming Engine (cnv.cx API) ---
+// --- Tier 1: Vidssave Extractor & Stream Engine ---
+export const fetchVidssaveInfo = async (videoId) => {
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
+  const res = await fetch('https://api.vidssave.com/api/contentsite_api/media/parse', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+      'Origin': 'https://pk.vidssave.com',
+      'Referer': 'https://pk.vidssave.com/',
+    },
+    body: new URLSearchParams({
+      hostname: 'pk.vidssave.com',
+      auth: '4c9b7d21',
+      domain: 'api-ak.vidssave.com',
+      origin: 'source',
+      link: url,
+    }).toString(),
+    signal: AbortSignal.timeout(10000),
+  });
+
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.data) return null;
+
+  const decrypted = typeof json.data === 'string' ? decryptVidssave(json.data) : json.data;
+  if (!decrypted || !decrypted.title) return null;
+
+  return decrypted;
+};
+
+export const fetchVidssaveStream = async (videoId, quality = '720', type = 'video', cachedFormats = null) => {
+  try {
+    let resourceContent = null;
+
+    if (Array.isArray(cachedFormats) && cachedFormats.length > 0) {
+      const qLower = String(quality).toLowerCase().replace('p', '');
+      const matched = cachedFormats.find((f) => {
+        if (type === 'audio' || type === 'mp3') {
+          return f.ext === 'mp3' || !f.hasVideo;
+        }
+        return f.resolution && f.resolution.toLowerCase().includes(qLower);
+      });
+      if (matched && matched.resourceContent) {
+        resourceContent = matched.resourceContent;
+      }
+    }
+
+    if (!resourceContent) {
+      const info = await fetchVidssaveInfo(videoId);
+      if (!info || !info.resources || info.resources.length === 0) return null;
+
+      const resources = info.resources;
+      let target = null;
+
+      if (type === 'audio' || type === 'mp3') {
+        target = resources.find((r) => r.type === 'audio') || resources[0];
+      } else {
+        const qUpper = String(quality).toUpperCase();
+        const qWithP = qUpper.endsWith('P') ? qUpper : `${qUpper}P`;
+        target = resources.find((r) => r.type === 'video' && r.quality === qWithP);
+        if (!target) {
+          target = resources.find((r) => r.type === 'video' && (r.quality === '720P' || r.quality === '1080P' || r.quality === '360P'))
+            || resources.find((r) => r.type === 'video')
+            || resources[0];
+        }
+      }
+      resourceContent = target?.resource_content;
+    }
+
+    if (!resourceContent) return null;
+
+    // Request download task
+    const dlRes = await fetch('https://api.vidssave.com/api/contentsite_api/media/download', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Origin': 'https://pk.vidssave.com',
+        'Referer': 'https://pk.vidssave.com/',
+      },
+      body: new URLSearchParams({
+        hostname: 'pk.vidssave.com',
+        auth: '4c9b7d21',
+        domain: 'api-ak.vidssave.com',
+        request: resourceContent,
+        no_encrypt: '1',
+      }).toString(),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!dlRes.ok) return null;
+    const dlJson = await dlRes.json();
+    const dlData = dlJson.data ? decryptVidssave(dlJson.data) : null;
+    if (!dlData || !dlData.task_id) return null;
+
+    const taskId = dlData.task_id;
+
+    // Poll for download link (max 15 iterations * 1000ms = 15s)
+    for (let i = 0; i < 15; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      const qRes = await fetch('https://api.vidssave.com/api/contentsite_api/media/download_query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+          'Origin': 'https://pk.vidssave.com',
+          'Referer': 'https://pk.vidssave.com/',
+        },
+        body: new URLSearchParams({
+          hostname: 'pk.vidssave.com',
+          auth: '4c9b7d21',
+          domain: 'api-ak.vidssave.com',
+          download_domain: 'vidssave.com',
+          origin: 'content_site',
+          task_id: taskId,
+        }).toString(),
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (qRes.ok) {
+        const qText = await qRes.text();
+        const dataMatch = qText.match(/data:\s*([^\n]+)/);
+        if (dataMatch) {
+          try {
+            const payload = JSON.parse(dataMatch[1]);
+            const qDec = payload.data ? decryptVidssave(payload.data) : payload;
+            if (qDec && (qDec.download_link || qDec.download_url || qDec.url)) {
+              return qDec.download_link || qDec.download_url || qDec.url;
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch (err) {
+    process.stderr.write(`[youtubeService] Tier 1 vidssave error: ${err.message}\n`);
+  }
+  return null;
+};
+
+// --- Tier 2: Y2Mate Direct Tunnel Streaming Engine (cnv.cx API) ---
 export const fetchY2MateStream = async (videoId, quality = '720', format = 'mp4') => {
   try {
     const keyRes = await fetch(`https://cnv.cx/v2/sanity/key?id=${videoId}`, {
@@ -101,49 +231,12 @@ export const fetchY2MateStream = async (videoId, quality = '720', format = 'mp4'
       return data.url;
     }
   } catch (err) {
-    process.stderr.write(`[youtubeService] Tier 1 Y2Mate engine error: ${err.message}\n`);
+    process.stderr.write(`[youtubeService] Tier 2 Y2Mate engine error: ${err.message}\n`);
   }
   return null;
 };
 
-// --- Tier 3 Invidious Fetcher ---
-const fetchFromInstance = async (baseUrl, videoId, maxRetries = 1) => {
-  let lastError = null;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const res = await fetch(`${baseUrl}/api/v1/videos/${videoId}`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(2500),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Instance ${baseUrl} returned status ${res.status}`);
-      }
-
-      const text = await res.text();
-      if (!text || text.trim().length === 0) {
-        throw new Error(`Empty response from ${baseUrl}`);
-      }
-
-      const data = JSON.parse(text);
-      if (!data || !data.title) {
-        throw new Error(`Invalid response structure from ${baseUrl}`);
-      }
-
-      return data;
-    } catch (err) {
-      lastError = err;
-      if (attempt < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
-      }
-    }
-  }
-  throw lastError;
-};
-
+// Stream pipe with redirect support
 const getStreamWithRedirects = (streamUrl, maxRedirects = 5) => {
   return new Promise((resolve, reject) => {
     const parsed = new URL(streamUrl);
@@ -183,82 +276,39 @@ const getStreamWithRedirects = (streamUrl, maxRedirects = 5) => {
   });
 };
 
-const parseIsoDuration = (isoStr) => {
-  if (!isoStr || typeof isoStr !== 'string') return null;
-  const match = isoStr.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/i);
-  if (!match) return null;
-  const hours = parseInt(match[1] || 0, 10);
-  const mins = parseInt(match[2] || 0, 10);
-  const secs = parseInt(match[3] || 0, 10);
-  const total = hours * 3600 + mins * 60 + secs;
-  return total > 0 ? total : null;
-};
-
-const parseInvidiousFormats = (data, duration) => {
-  if (!data) return [];
-  const dur = duration || (data.lengthSeconds ? parseInt(data.lengthSeconds, 10) : null);
-  const adaptiveFormats = Array.isArray(data.adaptiveFormats) ? data.adaptiveFormats : [];
-  const formatStreams = Array.isArray(data.formatStreams) ? data.formatStreams : [];
-
-  const audioTracks = adaptiveFormats.filter((f) => f.type?.includes('audio') || f.container === 'm4a');
-  const bestAudio = audioTracks.find((f) => f.itag === '140') || audioTracks[0];
-  const audioBytes = bestAudio?.clen
-    ? parseInt(bestAudio.clen, 10)
-    : dur
-      ? Math.round((128000 * dur) / 8)
-      : 0;
+const formatVidssaveResources = (resources, dur) => {
+  if (!Array.isArray(resources) || resources.length === 0) return [];
+  const itagMap = {
+    '1080P': '137',
+    '720P': '22',
+    '480P': '135',
+    '360P': '18',
+    '240P': '133',
+    '144P': '160',
+  };
 
   const parsed = [];
-  const seenRes = new Set();
-
-  for (const s of formatStreams) {
-    const res = s.qualityLabel || s.size || s.resolution || '720p';
-    const bytes = s.clen ? parseInt(s.clen, 10) : null;
-    seenRes.add(res);
-    parsed.push({
-      format_id: String(s.itag || '22'),
-      ext: s.container || 'mp4',
-      resolution: res,
-      vcodec: s.encoding || 'h264',
-      acodec: 'mp4a.40.2',
-      url: s.url,
-      filesize: bytes,
-      hasVideo: true,
-      hasAudio: true,
-    });
-  }
-
-  for (const s of adaptiveFormats) {
-    if (!s.type?.includes('video') && !s.qualityLabel && !s.resolution) continue;
-    const isMp4 = s.type?.includes('mp4') || s.container === 'mp4' || s.encoding?.includes('avc') || s.encoding?.includes('h264');
-    if (!isMp4) continue;
-    const res = s.qualityLabel || s.resolution || '';
-    if (!res || seenRes.has(res)) continue;
-    seenRes.add(res);
-
-    const videoBytes = s.clen
-      ? parseInt(s.clen, 10)
-      : s.bitrate && dur
-        ? Math.round((parseInt(s.bitrate, 10) * dur) / 8)
-        : null;
-    const totalBytes = videoBytes ? videoBytes + audioBytes : null;
+  for (const r of resources) {
+    const q = r.quality || '';
+    const isVideo = r.type === 'video';
+    const isAudio = r.type === 'audio';
 
     parsed.push({
-      format_id: String(s.itag || '137'),
-      ext: 'mp4',
-      resolution: res,
-      vcodec: 'h264',
+      format_id: itagMap[q] || (isAudio ? '140' : String(r.resource_id || '22')),
+      ext: (r.format || (isAudio ? 'mp3' : 'mp4')).toLowerCase(),
+      resolution: isAudio ? 'Audio (128kbps)' : (q.toLowerCase() || '720p'),
+      vcodec: isVideo ? 'h264' : 'none',
       acodec: 'mp4a.40.2',
-      url: s.url,
-      filesize: totalBytes,
-      hasVideo: true,
+      filesize: r.size ? parseInt(r.size, 10) : dur ? Math.round((2000 * 1000 * dur) / 8) : null,
+      hasVideo: isVideo,
       hasAudio: true,
+      resourceContent: r.resource_content || null,
     });
   }
-
   return parsed;
 };
 
+// --- Video Metadata Fetcher ---
 export const fetchVideoInfo = async (url) => {
   const cached = videoInfoCache.get(url);
   if (cached && cached.duration) {
@@ -275,150 +325,57 @@ export const fetchVideoInfo = async (url) => {
   let duration = null;
   let formats = [];
 
-  // Multi-source extraction: oEmbed, YouTubei, and Invidious
-  const oembedPromise = (async () => {
+  // Tier 1: Extract full info & formats from pk.vidssave.com
+  try {
+    const vidssaveData = await fetchVidssaveInfo(videoId);
+    if (vidssaveData) {
+      if (vidssaveData.title) title = vidssaveData.title;
+      if (vidssaveData.thumbnail) thumbnail = vidssaveData.thumbnail;
+      if (vidssaveData.duration) duration = parseInt(vidssaveData.duration, 10);
+      if (Array.isArray(vidssaveData.resources) && vidssaveData.resources.length > 0) {
+        formats = formatVidssaveResources(vidssaveData.resources, duration);
+      }
+    }
+  } catch (err) {
+    process.stderr.write(`[youtubeService] Vidssave info extraction fallback: ${err.message}\n`);
+  }
+
+  // Tier 3: oEmbed official YouTube fallback if title or thumbnail missing
+  if (!title || !thumbnail) {
     try {
-      const res = await fetch(
+      const oembedRes = await fetch(
         `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
         {
           signal: AbortSignal.timeout(3500),
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
         }
       );
-      if (res.ok) {
-        const d = await res.json();
-        return { title: d.title, thumbnail: d.thumbnail_url };
+      if (oembedRes.ok) {
+        const d = await oembedRes.json();
+        if (d.title && !title) title = d.title;
+        if (d.thumbnail_url && !thumbnail) thumbnail = d.thumbnail_url;
       }
     } catch {}
-    return null;
-  })();
+  }
 
-  const youtubeiPromise = (async () => {
-    const clients = [
-      { clientName: 'MWEB', clientVersion: '2.20240722.01.00' },
-      { clientName: 'WEB', clientVersion: '2.20240722.01.00' }
-    ];
-    for (const c of clients) {
-      try {
-        const res = await fetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-          },
-          body: JSON.stringify({
-            videoId,
-            context: { client: { clientName: c.clientName, clientVersion: c.clientVersion, hl: 'en', gl: 'US' } }
-          }),
-          signal: AbortSignal.timeout(2500),
-        });
-        if (res.ok) {
-          const d = await res.json();
-          const dur = d.videoDetails?.lengthSeconds || d.microformat?.playerMicroformatRenderer?.lengthSeconds;
-          if (dur) {
-            return {
-              duration: parseInt(dur, 10),
-              title: d.videoDetails?.title || null,
-            };
-          }
-        }
-      } catch {}
-    }
-    return null;
-  })();
-
-  const invidiousPromise = (async () => {
-    const instances = [
-      'https://invidious.f5.si',
-      'https://invidious.nerdvpn.de',
-      'https://inv.nadeko.net',
-    ];
-    const promises = instances.map(async (base) => {
-      const res = await fetch(`${base}/api/v1/videos/${videoId}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(3000),
+  // Resilient fallback for duration from page headers if still missing
+  if (!duration) {
+    try {
+      const pRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        },
+        signal: AbortSignal.timeout(2500),
       });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const d = await res.json();
-      if (d && (d.lengthSeconds || d.title || d.adaptiveFormats)) return d;
-      throw new Error('No data');
-    });
-    try {
-      return await Promise.any(promises);
-    } catch {
-      return null;
-    }
-  })();
-
-  const [oembedData, youtubeiData, invidiousData] = await Promise.all([
-    oembedPromise,
-    youtubeiPromise,
-    invidiousPromise,
-  ]);
-
-  if (oembedData?.title) title = oembedData.title;
-  if (oembedData?.thumbnail) thumbnail = oembedData.thumbnail;
-
-  if (youtubeiData?.title && !title) title = youtubeiData.title;
-  if (youtubeiData?.duration) duration = youtubeiData.duration;
-
-  if (invidiousData) {
-    if (!title && invidiousData.title) title = invidiousData.title;
-    if (!duration && invidiousData.lengthSeconds) duration = parseInt(invidiousData.lengthSeconds, 10);
-    const invFormats = parseInvidiousFormats(invidiousData, duration);
-    if (invFormats.length > 0) {
-      formats = invFormats;
-    }
-  }
-
-  // Resilient fallback for duration: check /shorts/ and /watch page metadata
-  if (!duration) {
-    const pageUrls = [
-      `https://www.youtube.com/shorts/${videoId}`,
-      `https://www.youtube.com/watch?v=${videoId}`,
-    ];
-    for (const pageUrl of pageUrls) {
-      try {
-        const pRes = await fetch(pageUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-          },
-          signal: AbortSignal.timeout(2500),
-        });
-        if (pRes.ok) {
-          const html = await pRes.text();
-          const isoMatch = html.match(/itemprop="duration"\s+content="([^"]+)"/i);
-          if (isoMatch && isoMatch[1]) {
-            duration = parseIsoDuration(isoMatch[1]);
-          }
-          if (!duration) {
-            const msMatch = html.match(/"approxDurationMs":"(\d+)"/);
-            if (msMatch) duration = Math.round(parseInt(msMatch[1], 10) / 1000);
-          }
-          if (!duration) {
-            const secMatch = html.match(/"lengthSeconds":"(\d+)"/);
-            if (secMatch) duration = parseInt(secMatch[1], 10);
-          }
-          if (duration) break;
-        }
-      } catch {}
-    }
-  }
-
-  // Guaranteed fallback: yt-dlp on server (bypasses datacenter restrictions via android client)
-  if (!duration) {
-    try {
-      const ytdlpInfo = await ytdlpService.fetchVideoInfo(url);
-      if (ytdlpInfo?.duration) {
-        duration = ytdlpInfo.duration;
-        if (!title && ytdlpInfo.title) title = ytdlpInfo.title;
+      if (pRes.ok) {
+        const html = await pRes.text();
+        const secMatch = html.match(/"lengthSeconds":"(\d+)"/);
+        if (secMatch) duration = parseInt(secMatch[1], 10);
       }
     } catch {}
   }
 
-  // Dynamic filesize calculation: If formats were not provided from Invidious CDN, generate format options
-  // where filesize dynamically corresponds to this exact video's duration
+  // Static standard format options if formats couldn't be loaded dynamically
   if (formats.length === 0) {
     const dur = duration && duration > 0 ? duration : null;
     formats = [
@@ -490,7 +447,7 @@ export const fetchVideoInfo = async (url) => {
 
 const resolveQualityFromFormat = (fmt) => {
   if (!fmt) return null;
-  const h = fmt.height || (fmt.resolution?.match(/(\d+)x(\d+)/)?.[2]) || (fmt.resolution?.match(/(\d+)p/)?.[1]);
+  const h = fmt.height || (fmt.resolution?.match(/(\d+)x(\d+)/)?.[2]) || (fmt.resolution?.match(/(\d+)p/i)?.[1]);
   const numH = parseInt(h, 10);
   if (numH >= 1080) return '1080';
   if (numH >= 720) return '720';
@@ -508,7 +465,7 @@ const mapFormatIdToQuality = (formatId, cachedFormats = []) => {
       const q = resolveQualityFromFormat(topVideo);
       if (q) return q;
     }
-    return '1080';
+    return '720';
   }
 
   const itagMap = {
@@ -542,6 +499,7 @@ const mapFormatIdToQuality = (formatId, cachedFormats = []) => {
   return '720';
 };
 
+// --- Main Downloader Flow ---
 export const downloadVideo = async (url, formatId, type) => {
   const videoId = extractYouTubeId(url);
   if (!videoId) {
@@ -551,9 +509,21 @@ export const downloadVideo = async (url, formatId, type) => {
   const cached = videoInfoCache.get(url);
   const targetQuality = mapFormatIdToQuality(formatId, cached?.formats);
 
-  // 1. Tier 1: Y2Mate / cnv.cx Direct Tunnel Streaming Engine
+  // 1. Tier 1: Vidssave Engine (pk.vidssave.com)
   try {
-    process.stdout.write(`[youtubeService] Tier 1: Requesting Y2Mate stream for ${videoId} with quality ${targetQuality} (formatId: ${formatId || 'best'})\n`);
+    process.stdout.write(`[youtubeService] Tier 1: Requesting Vidssave stream for ${videoId} (${targetQuality}p, type: ${type || 'video'})\n`);
+    const vidssaveStreamUrl = await fetchVidssaveStream(videoId, targetQuality, type, cached?.formats);
+    if (vidssaveStreamUrl) {
+      process.stdout.write(`[youtubeService] Tier 1 Vidssave stream URL obtained. Connecting...\n`);
+      return await getStreamWithRedirects(vidssaveStreamUrl);
+    }
+  } catch (err) {
+    process.stdout.write(`[youtubeService] Tier 1 Vidssave failed: ${err.message}\n`);
+  }
+
+  // 2. Tier 2: Y2Mate Direct Tunnel Streaming Engine (cnv.cx API)
+  try {
+    process.stdout.write(`[youtubeService] Tier 2: Requesting Y2Mate stream for ${videoId} with quality ${targetQuality}\n`);
     let y2mateStreamUrl = await fetchY2MateStream(videoId, targetQuality, type);
 
     if (!y2mateStreamUrl && targetQuality !== '720') {
@@ -579,45 +549,21 @@ export const downloadVideo = async (url, formatId, type) => {
           (res) => {
             if (res.statusCode >= 200 && res.statusCode < 300) {
               const contentLength = res.headers['content-length'];
-              process.stdout.write(`[youtubeService] Y2Mate stream connected (quality: ${targetQuality}, size: ${contentLength ? `${Math.round(contentLength / 1048576)} MB` : 'unknown'})\n`);
+              process.stdout.write(`[youtubeService] Tier 2 Y2Mate stream connected (quality: ${targetQuality}, size: ${contentLength ? `${Math.round(contentLength / 1048576)} MB` : 'unknown'})\n`);
               resolve(res);
             } else {
-              reject(new Error(`Y2Mate stream failed with status ${res.statusCode}`));
+              reject(new Error(`Tier 2 Y2Mate stream failed with status ${res.statusCode}`));
             }
           }
         );
         req.on('error', reject);
-        req.on('timeout', () => req.destroy(new Error('Y2Mate stream connection timeout')));
+        req.on('timeout', () => req.destroy(new Error('Tier 2 Y2Mate stream connection timeout')));
       });
     }
   } catch (err) {
-    process.stdout.write(`[youtubeService] Tier 1 Y2Mate stream failed: ${err.message}\n`);
+    process.stdout.write(`[youtubeService] Tier 2 Y2Mate stream failed: ${err.message}\n`);
   }
 
-  // 2. Tier 3: Invidious stream fallback
-  try {
-    const info = await fetchVideoInfo(url);
-    const videoFormats = Array.isArray(info.formats)
-      ? info.formats.filter((f) => f.vcodec !== 'none' && f.format_note !== 'storyboard' && !f.format_id?.startsWith('sb'))
-      : [];
-
-    let matchedFormat = null;
-    if (formatId && formatId !== 'best') {
-      matchedFormat = videoFormats.find((f) => String(f.format_id) === String(formatId) || String(f.formatId) === String(formatId));
-      if (!matchedFormat && targetQuality) {
-        matchedFormat = videoFormats.find((f) => (f.resolution || '').includes(targetQuality));
-      }
-    }
-
-    const streamUrl = matchedFormat?.url || videoFormats[0]?.url || info.formats?.[0]?.url;
-    if (streamUrl && !streamUrl.includes('/storyboard')) {
-      process.stdout.write(`[youtubeService] Tier 3 Invidious streaming format ${matchedFormat?.format_id || videoFormats[0]?.format_id || 'first-available'}\n`);
-      return await getStreamWithRedirects(streamUrl);
-    }
-  } catch (err) {
-    process.stdout.write(`[youtubeService] Tier 3 Invidious stream failed: ${err.message}\n`);
-  }
-
-  // If all failed, throw friendly error
+  // If all failed, throw user-friendly error
   throw new Error('We are unable to fulfill the request for YouTube right now. Please retry after some time, or try our other supported platforms.');
 };

@@ -35,7 +35,7 @@ const translateText = async (text, targetLang, retries = 2) => {
     try {
       const res = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) URL2Vid-Locale-Translator/1.0',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) mediasaver-Locale-Translator/1.0',
         },
       });
 

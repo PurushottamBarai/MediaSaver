@@ -1,37 +1,20 @@
-# URL2Vid
+# MediaSaver
 > Download videos and audio from any supported social or media platform instantly.
 
-URL2Vid is a high-performance, ad-free web application that takes any media link and provides direct, downloadable MP4 (video) or MP3 (audio) streams with exact file sizes and quality options.
+mediasaver is a high-performance, ad-free web application that takes any media link and provides direct, downloadable MP4 (video) or MP3 (audio) streams with exact file sizes and quality options.
 
 ## Tech Stack
-- **Frontend:** React 18, JavaScript, Vite, Tailwind CSS, Lucide React
+- **Frontend:** React.js, Vite, Tailwind CSS, JavaScript
 - **Backend:** Node.js, Express
-- **Core Libraries:** `yt-dlp-exec` (extraction), `fluent-ffmpeg` & `ffmpeg-static` (processing & conversion)
+- **Core Libraries:** `yt-dlp-exec` (extraction), `fluent-ffmpeg` & `ffmpeg-static` (Audio extraction, MP3 conversion, lossless video muting)
 
 ## Features
-- **Multi-Platform Support:** Extract media from 12+ major platforms including YouTube, Instagram, Facebook, X (Twitter), Reddit, LinkedIn, Snapchat, Pinterest, Threads, Vimeo, Twitch, and Dailymotion.
-- **Accurate File Sizes:** View estimated/exact file sizes directly beside each resolution and quality option in the dropdown before downloading.
-- **Multiple Audio Bitrate Tiers:** Convert any video to MP3 in selectable bitrates (192 kbps, 320 kbps, 128 kbps, 96 kbps).
-- **True Muted Video (No Sound):** Strips all audio tracks using fast FFmpeg stream-copy (`-an -c:v copy`) with zero re-encoding time or quality degradation.
-- **Zero-Proxy Architecture:** High reliability without costly residential proxies, utilizing distributed multi-instance resolvers and specialized scrapers.
-- **Embedded Media Resolution:** Automatically resolves shortlinks (e.g. Reddit `/s/` links, Pinterest short pins) and shared video embeds.
-- **Modern, Ad-Free UI:** Clean, responsive dark-mode interface built with React and Tailwind CSS.
+- **Multi-Platform Support:** Extract media from 12+ major platforms including YouTube, Instagram, Facebook, X (Twitter), Reddit, LinkedIn, Snapchat, Pinterest, Threads, Vimeo, Twitch, and Dailymotion and from music plaforms.
+- **All available formats:** Downloads all available formats of the media including video, audio, muted video and many more. 
+- **Reliable Architecture:** High reliability without costly residential proxies, utilizing distributed multi-instance resolvers and specialized scrapers.
 
-## Supported Platforms
-- YouTube (Videos, Shorts, & Live)
-- Instagram (Posts & Reels)
-- Facebook (Videos & Reels)
-- X (Twitter)
-- Reddit (Native & Embedded)
-- LinkedIn (Feed & Video Posts)
-- Snapchat (Spotlight)
-- Threads (Video Posts)
-- Pinterest (Pins & Idea Pins)
-- Vimeo
-- Twitch (Clips)
-- Dailymotion
 
-## Installation / Setup
+## Setup
 
 ### Prerequisites
 - Node.js (v18 or newer)
@@ -39,8 +22,8 @@ URL2Vid is a high-performance, ad-free web application that takes any media link
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/PurushottamBarai/URL2Vid.git
-cd URL2Vid
+git clone https://github.com/PurushottamBarai/mediasaver.git
+cd mediasaver
 ```
 
 ### 2. Backend Setup
@@ -67,7 +50,7 @@ Run the test suite against your local backend or production API:
 node test_urls.mjs
 
 # Test production deployment
-API_URL=https://url2vid.codedeck.me node test_urls.mjs
+API_URL=https://mediasaver.codedeck.me node test_urls.mjs
 ```
 
 ## Usage
@@ -86,5 +69,3 @@ API_URL=https://url2vid.codedeck.me node test_urls.mjs
 ## Disclaimer
 This project is built strictly for personal, educational, and fair-use archiving purposes. Users are responsible for ensuring their downloads respect copyright laws and the Terms of Service of the respective platforms.
 
-## Contributing
-Contributions, bug reports, and pull requests are welcome.

@@ -109,7 +109,7 @@ const App = () => {
 
               {/* Bottom bar */}
               <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-text-secondary opacity-75">
-                <p>© {new Date().getFullYear()} URL2Vid. All rights reserved.</p>
+                <p>© {new Date().getFullYear()} mediasaver. All rights reserved.</p>
                 <div className="flex items-center gap-3">
                   <a href="/user-guide" className="hover:text-accent hover:underline">User Guide</a>
                   <span>•</span>
