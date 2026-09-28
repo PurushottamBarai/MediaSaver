@@ -1,5 +1,4 @@
-import https from 'https';
-import { DUMMY_FORMAT, LINKEDIN_CRAWLER_AGENTS as CRAWLER_USER_AGENTS, makeHeaders, fetchContentLength } from '../utils/constants.js';
+import { DUMMY_FORMAT, LINKEDIN_CRAWLER_AGENTS as CRAWLER_USER_AGENTS, makeHeaders, fetchContentLength, fetchHttpMediaStream } from '../utils/constants.js';
 
 const resolveShortUrl = async (url) => {
   if (!url.includes('lnkd.in')) return url;
@@ -88,17 +87,5 @@ export const fetchVideoInfo = async (url) => {
 
 export const downloadVideo = async (url) => {
   const info = await fetchVideoInfo(url);
-  const rawMp4Url = info.formats[0].url;
-
-  return new Promise((resolve, reject) => {
-    const req = https.get(rawMp4Url, { headers: makeHeaders(CRAWLER_USER_AGENTS[0]), timeout: 30000 }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        const req2 = https.get(res.headers.location, { headers: makeHeaders(CRAWLER_USER_AGENTS[0]), timeout: 30000 }, (res2) => {
-          resolve(res2);
-        }).on('error', reject).on('timeout', () => req2.destroy(new Error('Timeout')));
-      } else {
-        resolve(res);
-      }
-    }).on('error', reject).on('timeout', () => req.destroy(new Error('Timeout')));
-  });
+  return fetchHttpMediaStream(info.formats[0].url, makeHeaders(CRAWLER_USER_AGENTS[0]));
 };

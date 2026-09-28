@@ -1,7 +1,8 @@
 # MediaSaver
+(https://mediasaver-57yu.onrender.com)
 > Download videos and audio from any supported social or media platform instantly.
 
-mediasaver is a high-performance, ad-free web application that takes any media link and provides direct, downloadable MP4 (video) or MP3 (audio) streams with exact file sizes and quality options.
+MediaSaver is a high-performance, ad-free web application that takes any media link and provides direct, downloadable MP4 (video) or MP3 (audio) streams with exact file sizes and quality options.
 
 ## Tech Stack
 - **Frontend:** React.js, Vite, Tailwind CSS, JavaScript
@@ -50,7 +51,7 @@ Run the test suite against your local backend or production API:
 node test_urls.mjs
 
 # Test production deployment
-API_URL=https://mediasaver.codedeck.me node test_urls.mjs
+API_URL=https://mediasaver-57yu.onrender.com node test_urls.mjs
 ```
 
 ## Usage

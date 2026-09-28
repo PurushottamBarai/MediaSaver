@@ -1,9 +1,7 @@
 import { URL } from 'url';
-import https from 'https';
-import http from 'http';
 import { videoInfoCache } from '../utils/cache.js';
-import * as ytdlpService from './ytdlpService.js';
-import { fetchY2MateStream } from './youtubeService.js';
+import { STANDARD_AUDIO_FORMATS } from '../utils/constants.js';
+import { downloadAudioBySearch } from '../utils/audioHelper.js';
 
 // Parse ISO 8601 duration (e.g. PT3M36S, PT45S, PT1H2M10S)
 const parseIsoDuration = (isoStr) => {
@@ -67,12 +65,6 @@ export const parseAppleMusicUrl = (urlString) => {
   }
 };
 
-const audioFormats = [
-  { format_id: '320k', resolution: '320 kbps (Best)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '256k', resolution: '256 kbps (High)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '192k', resolution: '192 kbps (Standard)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '128k', resolution: '128 kbps (Compact)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-];
 
 /**
  * Fallback to scraping Apple Music web page schema (JSON-LD)
@@ -104,7 +96,7 @@ const fetchAppleMusicWebSchema = async (url) => {
       duration: null,
       platform: 'applemusic',
       spotifyType: 'track',
-      formats: audioFormats,
+      formats: STANDARD_AUDIO_FORMATS,
       audioAvailable: true,
       searchQuery: `${title} Official Audio`,
     };
@@ -143,7 +135,7 @@ const fetchAppleMusicWebSchema = async (url) => {
       isCollection: true,
       trackCount: tracks.length,
       tracks,
-      formats: audioFormats,
+      formats: STANDARD_AUDIO_FORMATS,
       audioAvailable: true,
     };
   }
@@ -162,7 +154,7 @@ const fetchAppleMusicWebSchema = async (url) => {
     spotifyType: 'track',
     trackName: title,
     artists: artistName,
-    formats: audioFormats,
+    formats: STANDARD_AUDIO_FORMATS,
     audioAvailable: true,
     searchQuery: `${artistName} ${title} Official Audio`.trim(),
   };
@@ -180,7 +172,6 @@ export const fetchAppleMusicInfo = async (url) => {
     throw new Error('Invalid Apple Music URL. Please enter a valid song, album, or playlist link.');
   }
 
-  // ---- Single track ----
   if (parsed.type === 'track') {
     if (/^\d+$/.test(parsed.trackId)) {
       try {
@@ -203,7 +194,7 @@ export const fetchAppleMusicInfo = async (url) => {
               spotifyType: 'track',
               trackName: track.trackName,
               artists: track.artistName,
-              formats: audioFormats,
+              formats: STANDARD_AUDIO_FORMATS,
               audioAvailable: true,
               previewUrl: track.previewUrl || null,
               searchQuery: `${track.artistName} ${track.trackName} Official Audio`,
@@ -222,7 +213,6 @@ export const fetchAppleMusicInfo = async (url) => {
     return result;
   }
 
-  // ---- Album ----
   if (parsed.type === 'album' && /^\d+$/.test(parsed.albumId)) {
     try {
       const lookupUrl = `https://itunes.apple.com/lookup?id=${parsed.albumId}&entity=song&limit=200`;
@@ -259,7 +249,7 @@ export const fetchAppleMusicInfo = async (url) => {
             isCollection: true,
             trackCount: tracks.length,
             tracks,
-            formats: audioFormats,
+            formats: STANDARD_AUDIO_FORMATS,
             audioAvailable: true,
           };
 
@@ -270,7 +260,6 @@ export const fetchAppleMusicInfo = async (url) => {
     } catch {}
   }
 
-  // ---- Playlist or Web Schema fallback ----
   const result = await fetchAppleMusicWebSchema(url);
   videoInfoCache.set(url, result);
   return result;
@@ -281,64 +270,13 @@ export const fetchAppleMusicInfo = async (url) => {
  * Tier 1: Resolve YouTube ID + Y2Mate CDN (fast, no ffmpeg)
  * Tier 2: yt-dlp ytsearch fallback (slower, uses ffmpeg)
  */
-export const downloadAppleMusicTrack = async (url, formatId, type, bitrate) => {
+export const downloadAppleMusicTrack = async (url) => {
   let searchQuery = null;
-
-  // 1. If full Apple Music URL, resolve metadata to get a clean search query
   if (url.includes('music.apple.com') || url.includes('itunes.apple.com')) {
     try {
       const info = await fetchAppleMusicInfo(url);
-      if (info.searchQuery) {
-        searchQuery = info.searchQuery;
-      } else if (info.title) {
-        searchQuery = `${info.title} Official Audio`;
-      }
+      searchQuery = info.searchQuery || (info.title ? `${info.title} Official Audio` : null);
     } catch {}
   }
-
-  if (!searchQuery) {
-    searchQuery = url.replace(/^https?:\/\//, '');
-  }
-
-  process.stdout.write(`[appleMusicService] Searching audio for: "${searchQuery}"\n`);
-
-  // Tier 1: Fast CDN path
-  try {
-    const videoId = await ytdlpService.resolveSearchVideoId(searchQuery);
-    if (videoId) {
-      process.stdout.write(`[appleMusicService] Tier 1: Resolved videoId ${videoId}, fetching Y2Mate CDN stream...\n`);
-      const cdnUrl = await fetchY2MateStream(videoId, '720', 'mp3');
-      if (cdnUrl) {
-        const stream = await new Promise((resolve, reject) => {
-          const parsed = new URL(cdnUrl);
-          const client = parsed.protocol === 'http:' ? http : https;
-          const req = client.get(cdnUrl, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-              Referer: 'https://frame.y2meta-uk.com/',
-              Accept: '*/*',
-            },
-            timeout: 30000,
-          }, (res) => {
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              process.stdout.write(`[appleMusicService] Tier 1 CDN stream connected for ${videoId}\n`);
-              resolve(res);
-            } else {
-              reject(new Error(`CDN stream HTTP ${res.statusCode}`));
-            }
-          });
-          req.on('error', reject);
-          req.on('timeout', () => req.destroy(new Error('CDN stream connection timeout')));
-        });
-        stream.isMp3Ready = true;
-        return stream;
-      }
-    }
-  } catch (tier1Err) {
-    process.stdout.write(`[appleMusicService] Tier 1 CDN failed (${tier1Err.message}), falling back to yt-dlp...\n`);
-  }
-
-  // Tier 2 Fallback: yt-dlp download to temp file
-  const targetSearch = `ytsearch1:${searchQuery}`;
-  return ytdlpService.downloadVideo(targetSearch, 'bestaudio/best', 'audio');
+  return downloadAudioBySearch(searchQuery || url.replace(/^https?:\/\//, ''), 'appleMusicService');
 };

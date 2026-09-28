@@ -1,9 +1,7 @@
 import { URL } from 'url';
-import https from 'https';
-import http from 'http';
 import { videoInfoCache } from '../utils/cache.js';
-import * as ytdlpService from './ytdlpService.js';
-import { fetchY2MateStream } from './youtubeService.js';
+import { STANDARD_AUDIO_FORMATS } from '../utils/constants.js';
+import { downloadAudioBySearch } from '../utils/audioHelper.js';
 
 const SPOTIFY_REGEX = /(?:open\.spotify\.com\/|spotify:)(track|playlist|album|artist)[:/]([a-zA-Z0-9]+)/i;
 
@@ -101,47 +99,7 @@ export const fetchSpotifyInfo = async (url) => {
 
   const thumbnail = oembed?.thumbnail_url || entity?.coverArt?.sources?.[0]?.url || null;
 
-  // Standard audio formats for Spotify
-  const audioFormats = [
-    {
-      format_id: '320k',
-      resolution: '320 kbps (High Quality)',
-      ext: 'mp3',
-      acodec: 'mp3',
-      vcodec: 'none',
-      hasVideo: false,
-      isEstimated: false,
-    },
-    {
-      format_id: '256k',
-      resolution: '256 kbps (Medium)',
-      ext: 'mp3',
-      acodec: 'mp3',
-      vcodec: 'none',
-      hasVideo: false,
-      isEstimated: false,
-    },
-    {
-      format_id: '192k',
-      resolution: '192 kbps (Standard)',
-      ext: 'mp3',
-      acodec: 'mp3',
-      vcodec: 'none',
-      hasVideo: false,
-      isEstimated: false,
-    },
-    {
-      format_id: '128k',
-      resolution: '128 kbps (Compact)',
-      ext: 'mp3',
-      acodec: 'mp3',
-      vcodec: 'none',
-      hasVideo: false,
-      isEstimated: false,
-    },
-  ];
 
-  // Case 1: Single Track
   if (type === 'track') {
     const rawName = entity?.name || oembed?.title || 'Spotify Track';
     const artistList = Array.isArray(entity?.artists)
@@ -159,7 +117,7 @@ export const fetchSpotifyInfo = async (url) => {
       spotifyType: 'track',
       trackName: rawName,
       artists,
-      formats: audioFormats,
+      formats: STANDARD_AUDIO_FORMATS,
       audioAvailable: true,
       searchQuery: `${artists} - ${rawName} Official Audio`,
     };
@@ -168,7 +126,6 @@ export const fetchSpotifyInfo = async (url) => {
     return result;
   }
 
-  // Case 2: Playlist or Album
   const rawTrackList = entity?.trackList || [];
   const tracks = rawTrackList.map((t, idx) => {
     const tArtists =
@@ -202,7 +159,7 @@ export const fetchSpotifyInfo = async (url) => {
     isCollection: true,
     trackCount: tracks.length,
     tracks,
-    formats: audioFormats,
+    formats: STANDARD_AUDIO_FORMATS,
     audioAvailable: true,
   };
 
@@ -210,78 +167,13 @@ export const fetchSpotifyInfo = async (url) => {
   return result;
 };
 
-export const downloadSpotifyTrack = async (url, formatId, type, bitrate) => {
+export const downloadSpotifyTrack = async (url) => {
   let searchQuery = null;
-
-  // 1. If a full Spotify track URL is passed, resolve its track metadata first
   if (url.includes('spotify.com') || url.includes('spotify:')) {
     try {
       const info = await fetchSpotifyInfo(url);
-      if (info.searchQuery) {
-        searchQuery = info.searchQuery;
-      } else if (info.title) {
-        searchQuery = `${info.title} Official Audio`;
-      }
+      searchQuery = info.searchQuery || (info.title ? `${info.title} Official Audio` : null);
     } catch {}
   }
-
-  if (!searchQuery) {
-    // If raw query or title was passed in url param
-    searchQuery = url.replace(/^https?:\/\//, '');
-  }
-
-  process.stdout.write(`[spotifyService] Searching audio for: "${searchQuery}"\n`);
-
-  // Tier 1: Fast CDN path — resolve YouTube ID (~2-5s) + Y2Mate CDN stream (~3-10s)
-  // No temp file, no ffmpeg — just a direct pre-encoded MP3 from the CDN.
-  try {
-    const videoId = await ytdlpService.resolveSearchVideoId(searchQuery);
-    if (videoId) {
-      process.stdout.write(`[spotifyService] Tier 1: Resolved videoId ${videoId}, fetching Y2Mate CDN stream...\n`);
-      const cdnUrl = await fetchY2MateStream(videoId, '720', 'mp3');
-      if (cdnUrl) {
-        const stream = await new Promise((resolve, reject) => {
-          const parsed = new URL(cdnUrl);
-          const client = parsed.protocol === 'http:' ? http : https;
-          const req = client.get(
-            cdnUrl,
-            {
-              headers: {
-                'User-Agent':
-                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-                Referer: 'https://frame.y2meta-uk.com/',
-                Accept: '*/*',
-              },
-              timeout: 30000,
-            },
-            (res) => {
-              if (res.statusCode >= 200 && res.statusCode < 300) {
-                process.stdout.write(
-                  `[spotifyService] Tier 1 CDN stream connected for ${videoId}\n`,
-                );
-                resolve(res);
-              } else {
-                reject(new Error(`CDN stream HTTP ${res.statusCode}`));
-              }
-            },
-          );
-          req.on('error', reject);
-          req.on('timeout', () =>
-            req.destroy(new Error('CDN stream connection timeout')),
-          );
-        });
-        // Flag: already MP3, controller skips ffmpeg and pipes directly
-        stream.isMp3Ready = true;
-        return stream;
-      }
-    }
-  } catch (tier1Err) {
-    process.stdout.write(
-      `[spotifyService] Tier 1 CDN failed (${tier1Err.message}), falling back to yt-dlp...\n`,
-    );
-  }
-
-  // Tier 2 Fallback: yt-dlp download to temp file — slower but always works
-  const targetSearch = `ytsearch1:${searchQuery}`;
-  return ytdlpService.downloadVideo(targetSearch, 'bestaudio/best', 'audio');
+  return downloadAudioBySearch(searchQuery || url.replace(/^https?:\/\//, ''), 'spotifyService');
 };

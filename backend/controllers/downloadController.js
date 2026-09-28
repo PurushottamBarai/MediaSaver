@@ -13,8 +13,16 @@ import * as ffmpegService from "../services/ffmpegService.js";
 import { detectPlatform } from "../utils/platformDetector.js";
 
 const FORMAT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
-
+const AUDIO_PLATFORMS = new Set(['spotify', 'applemusic', 'youtubemusic', 'soundcloud']);
 const downloadStatusMap = new Map();
+
+const setDownloadStatus = (downloadId, status) => {
+  if (!downloadId) return;
+  downloadStatusMap.set(downloadId, status);
+  if (status === 'started' || status === 'error') {
+    setTimeout(() => downloadStatusMap.delete(downloadId), 60000);
+  }
+};
 
 const getDownloadStatus = (req, res) => {
   const { downloadId } = req.query;
@@ -70,18 +78,16 @@ const resolveMediaStream = async (platform, url, formatId, type) => {
 const downloadMedia = async (req, res, next) => {
   const { url, formatId, type, bitrate, downloadId, title } = req.query;
 
-  if (downloadId) {
-    downloadStatusMap.set(downloadId, 'pending');
-  }
+  setDownloadStatus(downloadId, 'pending');
 
   if (formatId && !FORMAT_ID_PATTERN.test(formatId)) {
-    if (downloadId) downloadStatusMap.set(downloadId, 'error');
+    setDownloadStatus(downloadId, 'error');
     return res.status(400).json({ error: "Invalid formatId provided." });
   }
 
   try {
     const platform = detectPlatform(url);
-    const isAudio = type === "audio" || platform === "spotify" || platform === "applemusic" || platform === "youtubemusic" || platform === "soundcloud";
+    const isAudio = type === "audio" || AUDIO_PLATFORMS.has(platform);
 
     const safeTitle = title
       ? title.replace(/[^a-zA-Z0-9 _.-]/g, "").trim().slice(0, 120)
@@ -89,29 +95,20 @@ const downloadMedia = async (req, res, next) => {
     const defaultBase = isAudio ? "audio" : "video";
     const filename = `${safeTitle || defaultBase}.${isAudio ? "mp3" : "mp4"}`;
 
-    // Set headers BEFORE resolving the stream so the browser always
-    // treats this as a file download, never as a JSON error payload.
     res.header("Content-Disposition", `attachment; filename="${filename}"`);
     res.header("Content-Type", isAudio ? "audio/mpeg" : "video/mp4");
     res.flushHeaders();
 
-    if (downloadId) {
-      downloadStatusMap.set(downloadId, 'started');
-      setTimeout(() => downloadStatusMap.delete(downloadId), 60000);
-    }
+    setDownloadStatus(downloadId, 'started');
 
     let mediaStream;
     try {
       mediaStream = await resolveMediaStream(platform, url, formatId, type);
     } catch (streamErr) {
-      // Headers already sent — cannot send JSON. End the response cleanly.
       process.stderr.write(
         `[download] Stream resolution failed after headers sent: ${streamErr.message}\n`,
       );
-      if (downloadId) {
-        downloadStatusMap.set(downloadId, 'error');
-        setTimeout(() => downloadStatusMap.delete(downloadId), 60000);
-      }
+      setDownloadStatus(downloadId, 'error');
       res.end();
       return;
     }
@@ -130,17 +127,20 @@ const downloadMedia = async (req, res, next) => {
     res.on("close", cleanup);
     res.on("finish", cleanup);
 
+    const attachStreamErrorHandler = (stream, label = 'Stream') => {
+      stream.on('error', (err) => {
+        if (err.message !== 'aborted' && err.code !== 'ECONNRESET') {
+          process.stderr.write(`[download] ${label} error: ${err.message}\n`);
+        }
+        cleanup();
+        if (!res.writableEnded) res.end();
+      });
+    };
+
     if (isAudio) {
       if (mediaStream.isMp3Ready) {
-        // CDN already delivered MP3 — pipe directly, no ffmpeg needed
         mediaStream.pipe(res);
-        mediaStream.on("error", (err) => {
-          if (err.message !== "aborted" && err.code !== "ECONNRESET") {
-            process.stderr.write(`[download] CDN stream error: ${err.message}\n`);
-          }
-          cleanup();
-          if (!res.writableEnded) res.end();
-        });
+        attachStreamErrorHandler(mediaStream, 'CDN stream');
         return;
       }
       const conversionSource = mediaStream.tempFilePath || mediaStream;
@@ -157,20 +157,9 @@ const downloadMedia = async (req, res, next) => {
     }
 
     mediaStream.pipe(res);
-    mediaStream.on("error", (err) => {
-      if (err.message !== "aborted" && err.code !== "ECONNRESET") {
-        process.stderr.write(`[download] Stream error: ${err.message}\n`);
-      }
-      cleanup();
-      if (!res.writableEnded) {
-        res.end();
-      }
-    });
+    attachStreamErrorHandler(mediaStream, 'Stream');
   } catch (error) {
-    if (req.query.downloadId) {
-      downloadStatusMap.set(req.query.downloadId, 'error');
-      setTimeout(() => downloadStatusMap.delete(req.query.downloadId), 60000);
-    }
+    setDownloadStatus(req.query.downloadId, 'error');
     if (!res.headersSent) {
       next(error);
     } else {
@@ -180,7 +169,7 @@ const downloadMedia = async (req, res, next) => {
       res.end();
     }
   }
-
 };
 
 export { downloadMedia, getDownloadStatus };
+

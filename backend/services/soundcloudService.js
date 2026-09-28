@@ -1,12 +1,6 @@
-import { URL } from 'url';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
-import ytdlp from 'yt-dlp-exec';
 import { videoInfoCache } from '../utils/cache.js';
+import { STANDARD_AUDIO_FORMATS } from '../utils/constants.js';
 import * as ytdlpService from './ytdlpService.js';
-
-const getYtdlpInstance = () => ytdlpService.getYtdlpInstance();
 
 /**
  * Resolves SoundCloud short links (on.soundcloud.com/...) to full soundcloud.com URLs
@@ -38,13 +32,6 @@ export const resolveSoundCloudUrl = async (urlString) => {
   return urlString;
 };
 
-const audioFormats = [
-  { format_id: '320k', resolution: '320 kbps (Best)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '256k', resolution: '256 kbps (High)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '192k', resolution: '192 kbps (Standard)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '128k', resolution: '128 kbps (Compact)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-];
-
 /**
  * Fetches track or playlist metadata from SoundCloud
  */
@@ -54,10 +41,9 @@ export const fetchSoundCloudInfo = async (rawUrl) => {
   const cached = videoInfoCache.get(resolvedUrl) || videoInfoCache.get(rawUrl);
   if (cached) return cached;
 
-  // 1. Check if it's a playlist / set
   const isSet = resolvedUrl.includes('/sets/');
   if (isSet) {
-    const ytdlpExec = getYtdlpInstance();
+    const ytdlpExec = ytdlpService.getYtdlpInstance();
     const playlistData = await ytdlpExec(resolvedUrl, {
       dumpSingleJson: true,
       flatPlaylist: true,
@@ -95,7 +81,7 @@ export const fetchSoundCloudInfo = async (rawUrl) => {
       isCollection: true,
       trackCount: tracks.length,
       tracks,
-      formats: audioFormats,
+      formats: STANDARD_AUDIO_FORMATS,
       audioAvailable: true,
     };
 
@@ -104,7 +90,6 @@ export const fetchSoundCloudInfo = async (rawUrl) => {
     return result;
   }
 
-  // 2. Single Track: Get oEmbed + yt-dlp metadata
   let oembed = null;
   try {
     const oembedRes = await fetch(
@@ -119,7 +104,6 @@ export const fetchSoundCloudInfo = async (rawUrl) => {
     }
   } catch {}
 
-  // Fetch duration and exact formats via yt-dlp
   let ytdlpInfo = null;
   try {
     ytdlpInfo = await ytdlpService.fetchVideoInfo(resolvedUrl);
@@ -147,7 +131,7 @@ export const fetchSoundCloudInfo = async (rawUrl) => {
     spotifyType: 'track',
     trackName: cleanTitle,
     artists: authorName,
-    formats: audioFormats,
+    formats: STANDARD_AUDIO_FORMATS,
     audioAvailable: true,
     searchQuery: `${authorName} ${cleanTitle}`.trim(),
   };

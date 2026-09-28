@@ -1,20 +1,15 @@
 {
   "name": "frontend",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
+  "description": "mediasaver React single-page application with Vite and static prerendering",
+  "author": "Purushottam Barai",
+  "license": "ISC",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node prerender.js",
     "preview": "vite preview"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "@vitejs/plugin-react": "^6.1.1",
-    "express": "^5.2.1",
-    "puppeteer": "^25.11.0",
-    "tailwindcss": "^4.3.3",
-    "vite": "^8.3.0"
   },
   "dependencies": {
     "axios": "^1.20.0",
@@ -24,5 +19,13 @@
     "react-dom": "^19.3.0",
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.18.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "express": "^5.2.1",
+    "puppeteer": "^25.11.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.0"
   }
 }

@@ -1,15 +1,8 @@
 import { URL } from 'url';
-import https from 'https';
-import http from 'http';
-import ytdlp from 'yt-dlp-exec';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
 import { videoInfoCache } from '../utils/cache.js';
+import { STANDARD_AUDIO_FORMATS, fetchCdnAudioStream } from '../utils/constants.js';
 import * as youtubeService from './youtubeService.js';
 import * as ytdlpService from './ytdlpService.js';
-
-const getYtdlpInstance = () => ytdlpService.getYtdlpInstance();
 
 export const parseYouTubeMusicUrl = (urlString) => {
   try {
@@ -34,13 +27,6 @@ export const parseYouTubeMusicUrl = (urlString) => {
   }
 };
 
-const audioFormats = [
-  { format_id: '320k', resolution: '320 kbps (Best)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '256k', resolution: '256 kbps (High)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '192k', resolution: '192 kbps (Standard)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-  { format_id: '128k', resolution: '128 kbps (Compact)', ext: 'mp3', acodec: 'mp3', vcodec: 'none', hasVideo: false },
-];
-
 export const fetchYouTubeMusicInfo = async (url) => {
   const cached = videoInfoCache.get(url);
   if (cached) return cached;
@@ -50,7 +36,6 @@ export const fetchYouTubeMusicInfo = async (url) => {
     throw new Error('Invalid YouTube Music URL. Please enter a valid song or playlist link.');
   }
 
-  // --- 1. Single Track ---
   if (parsed.type === 'track') {
     const videoUrl = `https://www.youtube.com/watch?v=${parsed.videoId}`;
     let info;
@@ -67,7 +52,7 @@ export const fetchYouTubeMusicInfo = async (url) => {
       platform: 'youtubemusic',
       spotifyType: 'track',
       videoId: parsed.videoId,
-      formats: audioFormats,
+      formats: STANDARD_AUDIO_FORMATS,
       audioAvailable: true,
       searchQuery: info.title || `${parsed.videoId}`,
     };
@@ -76,7 +61,6 @@ export const fetchYouTubeMusicInfo = async (url) => {
     return result;
   }
 
-  // --- 2. Playlist ---
   if (parsed.type === 'playlist') {
     // Tier 1: YouTubei Internal Browse API (zero subprocess, never IP-blocked on Render datacenter IPs)
     try {
@@ -177,7 +161,7 @@ export const fetchYouTubeMusicInfo = async (url) => {
               isCollection: true,
               trackCount: tracks.length,
               tracks,
-              formats: audioFormats,
+              formats: STANDARD_AUDIO_FORMATS,
               audioAvailable: true,
             };
 
@@ -193,7 +177,7 @@ export const fetchYouTubeMusicInfo = async (url) => {
     }
 
     // Tier 2: yt-dlp flat-playlist fallback
-    const ytdlpExec = getYtdlpInstance();
+    const ytdlpExec = ytdlpService.getYtdlpInstance();
     const playlistData = await ytdlpExec(url, {
       dumpSingleJson: true,
       flatPlaylist: true,
@@ -236,7 +220,7 @@ export const fetchYouTubeMusicInfo = async (url) => {
       isCollection: true,
       trackCount: tracks.length,
       tracks,
-      formats: audioFormats,
+      formats: STANDARD_AUDIO_FORMATS,
       audioAvailable: true,
     };
 
@@ -250,17 +234,14 @@ export const fetchYouTubeMusicInfo = async (url) => {
 export const downloadYouTubeMusicTrack = async (url, formatId, type, bitrate) => {
   let videoId = null;
 
-  // 1. Check if URL contains direct v= parameter
   if (url.includes('music.youtube.com') || url.includes('youtube.com') || url.includes('youtu.be')) {
     videoId = youtubeService.extractYouTubeId(url);
   }
 
-  // 2. If it's a raw video ID (11 chars)
   if (!videoId && /^[a-zA-Z0-9_-]{11}$/.test(url)) {
     videoId = url;
   }
 
-  // 3. If no videoId, try resolving from metadata
   if (!videoId) {
     try {
       const info = await fetchYouTubeMusicInfo(url);
@@ -274,34 +255,7 @@ export const downloadYouTubeMusicTrack = async (url, formatId, type, bitrate) =>
       process.stdout.write(`[youtubeMusicService] Tier 1: Fetching Y2Mate CDN stream for ${videoId}...\n`);
       const cdnUrl = await youtubeService.fetchY2MateStream(videoId, '720', 'mp3');
       if (cdnUrl) {
-        const stream = await new Promise((resolve, reject) => {
-          const parsed = new URL(cdnUrl);
-          const client = parsed.protocol === 'http:' ? http : https;
-          const req = client.get(
-            cdnUrl,
-            {
-              headers: {
-                'User-Agent':
-                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-                Referer: 'https://frame.y2meta-uk.com/',
-                Accept: '*/*',
-              },
-              timeout: 30000,
-            },
-            (res) => {
-              if (res.statusCode >= 200 && res.statusCode < 300) {
-                process.stdout.write(`[youtubeMusicService] Tier 1 CDN connected for ${videoId}\n`);
-                resolve(res);
-              } else {
-                reject(new Error(`CDN stream HTTP ${res.statusCode}`));
-              }
-            }
-          );
-          req.on('error', reject);
-          req.on('timeout', () => req.destroy(new Error('CDN stream connection timeout')));
-        });
-        stream.isMp3Ready = true;
-        return stream;
+        return await fetchCdnAudioStream(cdnUrl);
       }
     } catch (cdnErr) {
       process.stdout.write(`[youtubeMusicService] Tier 1 CDN failed (${cdnErr.message}), falling back to yt-dlp...\n`);

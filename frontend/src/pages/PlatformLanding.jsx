@@ -65,17 +65,49 @@ const PlatformLanding = ({
       }))
     };
 
-    return [webAppSchema, faqSchema];
-  }, [platformName, metaDescription, faqs]);
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://mediasaver-57yu.onrender.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": `${platformName} Downloader`,
+          "item": `https://mediasaver-57yu.onrender.com${path}`
+        }
+      ]
+    };
+
+    return [webAppSchema, faqSchema, breadcrumbSchema];
+  }, [platformName, metaDescription, faqs, path]);
 
   return (
-    <main className="flex-1 flex flex-col items-center justify-start pt-8 md:pt-14 px-4 w-full mx-auto">
+    <main className="flex-1 flex flex-col items-center justify-start pt-6 md:pt-10 px-4 w-full mx-auto">
       <SEO 
         title={metaTitle} 
         description={metaDescription} 
         schema={combinedSchema} 
         canonicalPath={path}
       />
+
+      {/* Breadcrumbs Navigation */}
+      <nav aria-label="Breadcrumb" className="w-full max-w-4xl mx-auto mb-6 text-xs sm:text-sm text-text-secondary">
+        <ol className="flex items-center space-x-2">
+          <li>
+            <Link to="/" className="hover:text-accent transition-colors">Home</Link>
+          </li>
+          <li className="text-border">/</li>
+          <li className="text-text-primary font-medium" aria-current="page">
+            {platformName} Downloader
+          </li>
+        </ol>
+      </nav>
 
       <div className="w-full max-w-2xl mx-auto">
         <Hero 
@@ -142,13 +174,27 @@ const PlatformLanding = ({
         </div>
       </section>
 
-      <section className="w-full max-w-4xl mx-auto py-8 px-4 border-t border-border text-center">
-        <p className="text-sm text-text-secondary mb-4">Check out our other tools:</p>
-        <div className="flex flex-wrap justify-center gap-4 text-accent text-sm font-medium">
-          <Link to="/" className="hover:underline">All-in-One Downloader</Link>
-          {platformName !== 'YouTube' && <Link to="/youtube-video-downloader" className="hover:underline">YouTube Downloader</Link>}
-          {platformName !== 'Instagram' && <Link to="/instagram-reel-downloader" className="hover:underline">Instagram Downloader</Link>}
-          {platformName !== 'Facebook' && <Link to="/facebook-video-downloader" className="hover:underline">Facebook Downloader</Link>}
+      <section className="w-full max-w-4xl mx-auto py-10 px-4 border-t border-border">
+        <h3 className="text-xl font-bold text-text-primary text-center mb-6">Explore Other Popular Media Downloaders</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+          <Link to="/" className="p-3 rounded-lg border border-border bg-surface hover:border-accent hover:text-accent transition-colors">
+            All-in-One Media Downloader (Universal)
+          </Link>
+          <Link to="/youtube-video-downloader" className="p-3 rounded-lg border border-border bg-surface hover:border-accent hover:text-accent transition-colors">
+            YouTube Video & Shorts Downloader
+          </Link>
+          <Link to="/youtube-music-downloader" className="p-3 rounded-lg border border-border bg-surface hover:border-accent hover:text-accent transition-colors">
+            YouTube Music to MP3 Converter
+          </Link>
+          <Link to="/instagram-reel-downloader" className="p-3 rounded-lg border border-border bg-surface hover:border-accent hover:text-accent transition-colors">
+            Instagram Reels & Post Downloader
+          </Link>
+          <Link to="/spotify-downloader" className="p-3 rounded-lg border border-border bg-surface hover:border-accent hover:text-accent transition-colors">
+            Spotify Track & Playlist Downloader
+          </Link>
+          <Link to="/reddit-video-downloader" className="p-3 rounded-lg border border-border bg-surface hover:border-accent hover:text-accent transition-colors">
+            Reddit Video & Audio Extractor
+          </Link>
         </div>
       </section>
     </main>

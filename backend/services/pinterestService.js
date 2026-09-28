@@ -1,6 +1,4 @@
-import https from 'https';
-import http from 'http';
-import { REQUEST_HEADERS, DUMMY_FORMAT, fetchContentLength } from '../utils/constants.js';
+import { REQUEST_HEADERS, DUMMY_FORMAT, fetchContentLength, fetchHttpMediaStream } from '../utils/constants.js';
 import { videoInfoCache } from '../utils/cache.js';
 
 const normalizePinterestUrl = (url) => {
@@ -77,19 +75,5 @@ export const fetchVideoInfo = async (url) => {
 
 export const downloadVideo = async (url) => {
   const info = await fetchVideoInfo(url);
-  const rawMp4Url = info.formats[0].url;
-
-  return new Promise((resolve, reject) => {
-    const get = rawMp4Url.startsWith('https') ? https.get : http.get;
-    const req = get(rawMp4Url, { headers: REQUEST_HEADERS, timeout: 30000 }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        const redirectGet = res.headers.location.startsWith('https') ? https.get : http.get;
-        const req2 = redirectGet(res.headers.location, { headers: REQUEST_HEADERS, timeout: 30000 }, (res2) => {
-          resolve(res2);
-        }).on('error', reject).on('timeout', () => req2.destroy(new Error('Timeout')));
-      } else {
-        resolve(res);
-      }
-    }).on('error', reject).on('timeout', () => req.destroy(new Error('Timeout')));
-  });
+  return fetchHttpMediaStream(info.formats[0].url, REQUEST_HEADERS);
 };

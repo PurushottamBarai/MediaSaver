@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
@@ -6,7 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { execSync, execFileSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 import rateLimiter from './middlewares/rateLimiter.js';
 import errorHandler from './middlewares/errorHandler.js';
@@ -18,6 +19,51 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const CONFIG = Object.freeze({
+  PORT: parseInt(process.env.PORT || '3001', 10),
+  ENV: process.env.NODE_ENV || 'production',
+  DEFAULT_ALLOWED_ORIGINS: [
+    'http://localhost:5173',
+    'http://localhost:3001',
+    'https://mediasaver-57yu.onrender.com',
+    'https://mediasaver.onrender.com',
+    'https://mediasaver.codedeck.me',
+  ],
+  KEEP_ALIVE_TIMEOUT_MS: 65000,
+  HEADERS_TIMEOUT_MS: 66000,
+  SHUTDOWN_TIMEOUT_MS: 10000,
+  FRONTEND_DIST: path.resolve(__dirname, '../frontend/dist'),
+});
+
+const VALID_STATIC_ROUTES = new Set([
+  '/',
+  '/about',
+  '/privacy-policy',
+  '/terms-of-service',
+  '/dmca',
+  '/user-guide',
+  '/contact',
+  '/feedback',
+  '/guide',
+  '/x-video-downloader',
+  '/youtube-video-downloader',
+  '/instagram-reel-downloader',
+  '/facebook-video-downloader',
+  '/twitter-video-downloader',
+  '/pinterest-video-downloader',
+  '/reddit-video-downloader',
+  '/linkedin-video-downloader',
+  '/snapchat-video-downloader',
+  '/threads-video-downloader',
+  '/vimeo-video-downloader',
+  '/twitch-clip-downloader',
+  '/dailymotion-video-downloader',
+  '/spotify-downloader',
+  '/apple-music-downloader',
+  '/youtube-music-downloader',
+  '/soundcloud-downloader',
+]);
 
 const findImpersonateBinary = () => {
   try {
@@ -57,7 +103,7 @@ const updateYtDlpBinary = async () => {
     const impersonateBinary = findImpersonateBinary();
     if (impersonateBinary) {
       process.env.YTDLP_CUSTOM_BINARY = impersonateBinary;
-      process.stdout.write(`[yt-dlp] Impersonate-capable yt-dlp binary found at ${impersonateBinary}. Skipping binary download.\n`);
+      process.stdout.write(`[yt-dlp] Impersonate-capable binary detected at ${impersonateBinary}\n`);
       return;
     }
   } catch {}
@@ -72,7 +118,7 @@ const updateYtDlpBinary = async () => {
     const nightlyUrl = `https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/${assetName}`;
     const stableUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
 
-    process.stdout.write(`[yt-dlp] Downloading latest nightly binary to ${targetPath}...\n`);
+    process.stdout.write(`[yt-dlp] Fetching binary to ${targetPath}...\n`);
 
     let binaryRes = await fetch(nightlyUrl, {
       headers: { 'User-Agent': 'mediasaver/1.0' },
@@ -81,7 +127,6 @@ const updateYtDlpBinary = async () => {
     });
 
     if (!binaryRes.ok) {
-      process.stdout.write(`[yt-dlp] Nightly build download returned HTTP ${binaryRes.status}, falling back to stable...\n`);
       binaryRes = await fetch(stableUrl, {
         headers: { 'User-Agent': 'mediasaver/1.0' },
         redirect: 'follow',
@@ -89,118 +134,177 @@ const updateYtDlpBinary = async () => {
       });
     }
 
-    if (!binaryRes.ok) throw new Error(`Binary download failed: HTTP ${binaryRes.status}`);
+    if (!binaryRes.ok) throw new Error(`Binary download failed with HTTP ${binaryRes.status}`);
 
     const buffer = await binaryRes.arrayBuffer();
     fs.writeFileSync(targetPath, Buffer.from(buffer));
     fs.chmodSync(targetPath, 0o755);
 
     process.env.YTDLP_CUSTOM_BINARY = targetPath;
-    process.stdout.write(`[yt-dlp] Updated binary at ${targetPath} (${buffer.byteLength} bytes)\n`);
+    process.stdout.write(`[yt-dlp] Binary ready at ${targetPath} (${buffer.byteLength} bytes)\n`);
   } catch (err) {
-    process.stderr.write(`[yt-dlp] Binary update failed (proceeding with default binary): ${err.message}\n`);
+    process.stderr.write(`[yt-dlp] Initialization notice: ${err.message}\n`);
   }
 };
 
-await updateYtDlpBinary();
+const createApp = () => {
+  const app = express();
 
-const app = express();
-const PORT = parseInt(process.env.PORT || '3001', 10);
+  const envOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+    : [];
+  const allowedOrigins = Array.from(new Set([...CONFIG.DEFAULT_ALLOWED_ORIGINS, ...envOrigins]));
 
-const defaultAllowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3001',
-  'https://mediasaver.onrender.com',
-  'https://mediasaver.codedeck.me',
-];
+  app.set('trust proxy', 1);
 
-const envOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
-  : [];
-
-const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins]));
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, false);
-    }
-  },
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type'],
-}));
-
-app.use(helmet({
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      'script-src': ["'self'", 'https://www.googletagmanager.com', "'unsafe-inline'"],
-      'script-src-elem': ["'self'", 'https://www.googletagmanager.com', "'unsafe-inline'"],
-      'connect-src': ["'self'", 'https://www.google-analytics.com', 'https://www.googletagmanager.com'],
-      'img-src': ["'self'", 'https:', 'data:', 'blob:'],
-      'media-src': ["'self'", 'https:', 'data:', 'blob:'],
-      'frame-src': [
-        "'self'",
-        'https://www.youtube.com',
-        'https://www.youtube-nocookie.com',
-        'https://v2.y2jar.cc',
-        'https://challenges.cloudflare.com',
-      ],
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
     },
-  },
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginEmbedderPolicy: false,
-}));
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+  }));
 
-app.set('trust proxy', 1);
-app.use(express.json({ limit: '10kb' }));
-app.use(rateLimiter);
+  app.use(helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        'script-src': ["'self'", 'https://www.googletagmanager.com', "'unsafe-inline'"],
+        'script-src-elem': ["'self'", 'https://www.googletagmanager.com', "'unsafe-inline'"],
+        'connect-src': ["'self'", 'https://www.google-analytics.com', 'https://www.googletagmanager.com'],
+        'img-src': ["'self'", 'https:', 'data:', 'blob:'],
+        'media-src': ["'self'", 'https:', 'data:', 'blob:'],
+        'frame-src': [
+          "'self'",
+          'https://www.youtube.com',
+          'https://www.youtube-nocookie.com',
+          'https://v2.y2jar.cc',
+          'https://challenges.cloudflare.com',
+        ],
+      },
+    },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginEmbedderPolicy: false,
+  }));
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+  app.use((req, res, next) => {
+    const proto = req.headers['x-forwarded-proto'];
+    if (proto && proto !== 'https') {
+      return res.redirect(301, `https://${req.headers.host || req.hostname}${req.originalUrl}`);
+    }
+    next();
+  });
 
-app.use('/api/info', infoRoutes);
-app.use('/api/download', downloadRoutes);
-app.use('/api/feedback', feedbackRoutes);
+  app.use(compression());
+  app.use(express.json({ limit: '10kb' }));
+  app.use(rateLimiter);
 
-const frontendPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendPath));
-app.use((_req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
 
-app.use(errorHandler);
+  app.use('/api/info', infoRoutes);
+  app.use('/api/download', downloadRoutes);
+  app.use('/api/feedback', feedbackRoutes);
 
-const server = app.listen(PORT, () => {
-  process.stdout.write(`[server] Running on port ${PORT}\n`);
-});
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && req.path.length > 1 && req.path.endsWith('/')) {
+      const query = req.url.slice(req.path.length);
+      const nonTrailing = req.path.replace(/\/+$/, '');
+      return res.redirect(301, nonTrailing + query);
+    }
+    next();
+  });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    process.stderr.write(`[server] ERROR: Port ${PORT} is already in use. Kill the existing process first:\n`);
-    process.stderr.write(`  netstat -ano | findstr :${PORT}   (find the PID)\n`);
-    process.stderr.write(`  taskkill /PID <pid> /F             (Windows)\n`);
-    process.stderr.write(`  kill -9 <pid>                      (Linux/Mac)\n`);
-  } else {
-    process.stderr.write(`[server] Fatal error: ${err.message}\n`);
-  }
+  app.use(express.static(CONFIG.FRONTEND_DIST, {
+    redirect: false,
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+      }
+    },
+  }));
+
+  app.use((req, res) => {
+    const prerenderedFile = path.join(CONFIG.FRONTEND_DIST, req.path.slice(1), 'index.html');
+    if (VALID_STATIC_ROUTES.has(req.path) || fs.existsSync(prerenderedFile)) {
+      if (fs.existsSync(prerenderedFile)) {
+        return res.status(200).sendFile(prerenderedFile);
+      }
+      return res.status(200).sendFile(path.join(CONFIG.FRONTEND_DIST, 'index.html'));
+    }
+
+    const custom404 = path.join(CONFIG.FRONTEND_DIST, '404.html');
+    if (fs.existsSync(custom404)) {
+      return res.status(404).sendFile(custom404);
+    }
+    return res.status(404).sendFile(path.join(CONFIG.FRONTEND_DIST, 'index.html'));
+  });
+
+  app.use(errorHandler);
+
+  return app;
+};
+
+const bootstrap = async () => {
+  await updateYtDlpBinary();
+
+  const app = createApp();
+  const server = app.listen(CONFIG.PORT, () => {
+    process.stdout.write(`[server] Running on port ${CONFIG.PORT} in ${CONFIG.ENV} mode\n`);
+  });
+
+  server.keepAliveTimeout = CONFIG.KEEP_ALIVE_TIMEOUT_MS;
+  server.headersTimeout = CONFIG.HEADERS_TIMEOUT_MS;
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      process.stderr.write(`[server] ERROR: Port ${CONFIG.PORT} is already in use.\n`);
+    } else {
+      process.stderr.write(`[server] Fatal error: ${err.message}\n`);
+    }
+    process.exit(1);
+  });
+
+  let isShuttingDown = false;
+  const shutdown = (signal) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+
+    process.stdout.write(`[server] ${signal} received — shutting down gracefully\n`);
+    server.close(() => {
+      process.stdout.write('[server] Closed all connections\n');
+      process.exit(0);
+    });
+
+    const forceTimer = setTimeout(() => {
+      process.stderr.write('[server] Forced shutdown after timeout\n');
+      process.exit(1);
+    }, CONFIG.SHUTDOWN_TIMEOUT_MS);
+    forceTimer.unref();
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+
+  process.on('unhandledRejection', (reason) => {
+    process.stderr.write(`[server] Unhandled Promise Rejection: ${reason instanceof Error ? reason.stack : reason}\n`);
+  });
+
+  process.on('uncaughtException', (err) => {
+    process.stderr.write(`[server] Uncaught Exception: ${err.stack || err}\n`);
+    shutdown('UNCAUGHT_EXCEPTION');
+  });
+};
+
+bootstrap().catch((err) => {
+  process.stderr.write(`[server] Bootstrap failure: ${err.stack || err.message}\n`);
   process.exit(1);
 });
-
-const shutdown = (signal) => {
-  process.stdout.write(`[server] ${signal} received — shutting down gracefully\n`);
-  server.close(() => {
-    process.stdout.write('[server] Closed all connections\n');
-    process.exit(0);
-  });
-  setTimeout(() => {
-    process.stderr.write('[server] Forced shutdown after timeout\n');
-    process.exit(1);
-  }, 10000);
-};
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));

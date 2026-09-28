@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mediasaver.codedeck.me/sitemap.xml
+Sitemap: https://mediasaver-57yu.onrender.com/sitemap.xml

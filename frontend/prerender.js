@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 const PORT = 54321;
 const DIST_DIR = path.resolve(__dirname, 'dist');
-const routes = ['/', '/404', '/user-guide', '/contact', '/feedback', ...platformsData.map((p) => p.path)];
+const routes = ['/', '/404', '/about', '/privacy-policy', '/terms-of-service', '/dmca', '/user-guide', '/contact', '/feedback', ...platformsData.map((p) => p.path)];
 
 async function prerender() {
   console.log(`Starting prerendering for ${routes.length} routes...`);
@@ -34,10 +34,11 @@ async function prerender() {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       let html = await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML);
-      const canonicalUrl = `https://mediasaver.codedeck.me${route === '/' ? '/' : route}`;
+      const canonicalUrl = `https://mediasaver-57yu.onrender.com${route === '/' ? '/' : route}`;
       html = html.replace(/<link rel="canonical" href="[^"]*"/, `<link rel="canonical" href="${canonicalUrl}"`);
       html = html.replace(/<meta property="og:url" content="[^"]*"/, `<meta property="og:url" content="${canonicalUrl}"`);
-      html = html.replaceAll('https://mediasaver.onrender.com', 'https://mediasaver.codedeck.me');
+      html = html.replaceAll('https://mediasaver.codedeck.me', 'https://mediasaver-57yu.onrender.com');
+      html = html.replaceAll('https://mediasaver.onrender.com', 'https://mediasaver-57yu.onrender.com');
       html = html.replaceAll(`http://localhost:${PORT}/`, '/');
       html = html.replaceAll(`http://localhost:${PORT}`, '');
 

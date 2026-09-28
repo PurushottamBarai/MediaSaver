@@ -3,7 +3,7 @@ import SEO from '../components/SEO';
 import { useLanguage } from '../context/LanguageContext';
 
 const CONTACT_TITLE = 'Contact Us - mediasaver';
-const CONTACT_DESCRIPTION = 'Have questions or need help? Contact us via contact@codedeck.me or purushottamx.in@gmail.com.';
+const CONTACT_DESCRIPTION = 'Have questions or need help? Contact us via purushottamx.in@gmail.com.';
 
 export default function Contact() {
   const { t } = useLanguage();
@@ -39,13 +39,6 @@ export default function Contact() {
         <p className="mb-6 text-gray-800">
           {t('contactHelpText', 'Have questions or need help with your purchase or our services? Use email:')}{' '}
           <a
-            href="mailto:contact@codedeck.me"
-            className="text-[#0E7C7B] hover:underline font-medium"
-          >
-            contact@codedeck.me
-          </a>{' '}
-          /{' '}
-          <a
             href="mailto:purushottamx.in@gmail.com"
             className="text-[#0E7C7B] hover:underline font-medium"
           >
@@ -53,9 +46,28 @@ export default function Contact() {
           </a>
         </p>
 
-        <p className="text-gray-800">
+        <p className="text-gray-800 mb-8">
           {t('contactReachOutText', 'to reach out and we will be in touch with you as quickly as possible. For specific issues, make use of the following POCs for faster redressal.')}
         </p>
+
+        {/* DMCA / Copyright Dedicated Contact Box */}
+        <div className="border border-border/80 rounded-xl p-6 bg-slate-50/70 text-sm space-y-3">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <span>🛡️</span> DMCA, Copyright &amp; Content Takedown Notices
+          </h2>
+          <p className="text-gray-600 leading-relaxed">
+            If you are a copyright owner or legal representative seeking to request the removal or blocking of specific content URLs, please submit your formal notice to our designated agent:
+          </p>
+          <div className="text-xs sm:text-sm font-mono bg-white border border-border p-3 rounded-lg text-gray-800 space-y-1">
+            <p><strong>Email:</strong> <a href="mailto:purushottamx.in@gmail.com?subject=DMCA%20Takedown%20Notice" className="text-[#0E7C7B] hover:underline font-semibold">purushottamx.in@gmail.com</a></p>
+            <p><strong>Subject:</strong> [DMCA Notice] Request for URL Block</p>
+            <p><strong>Response SLA:</strong> 24–48 business hours</p>
+          </div>
+          <p className="text-xs text-gray-500">
+            For statutory requirements and filing details, please review our full{' '}
+            <a href="/dmca" className="text-[#0E7C7B] font-medium hover:underline">DMCA Policy</a>.
+          </p>
+        </div>
       </div>
     </main>
   );

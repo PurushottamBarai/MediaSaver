@@ -1,5 +1,4 @@
-import https from 'https';
-import { REQUEST_HEADERS, DUMMY_FORMAT, fetchContentLength } from '../utils/constants.js';
+import { REQUEST_HEADERS, DUMMY_FORMAT, fetchContentLength, fetchHttpMediaStream } from '../utils/constants.js';
 import { videoInfoCache } from '../utils/cache.js';
 
 const fetchPageHtml = async (url) => {
@@ -47,17 +46,6 @@ export const fetchVideoInfo = async (url) => {
 
 export const downloadVideo = async (url) => {
   const info = await fetchVideoInfo(url);
-  const rawMp4Url = info.formats[0].url;
-
-  return new Promise((resolve, reject) => {
-    const req = https.get(rawMp4Url, { headers: REQUEST_HEADERS, timeout: 30000 }, (response) => {
-      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        const req2 = https.get(response.headers.location, { headers: REQUEST_HEADERS, timeout: 30000 }, (res2) => {
-          resolve(res2);
-        }).on('error', reject).on('timeout', () => req2.destroy(new Error('Timeout')));
-      } else {
-        resolve(response);
-      }
-    }).on('error', reject).on('timeout', () => req.destroy(new Error('Timeout')));
-  });
+  return fetchHttpMediaStream(info.formats[0].url, REQUEST_HEADERS);
 };
+

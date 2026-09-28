@@ -13,12 +13,17 @@ const PlatformLanding = lazy(() => import('./pages/PlatformLanding'));
 const UserGuide = lazy(() => import('./pages/UserGuide'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Feedback = lazy(() => import('./pages/Feedback'));
+const About = lazy(() => import('./pages/About'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Dmca = lazy(() => import('./pages/Dmca'));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    trackEvent('page_view', { page_path: pathname });
+    const normalizedPath = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    trackEvent('page_view', { page_path: normalizedPath });
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     const timer = setTimeout(() => {
       const input = document.getElementById('video-url-input');
@@ -30,11 +35,20 @@ const ScrollToTop = () => {
   return null;
 };
 
+const TrailingSlashRedirect = () => {
+  const location = useLocation();
+  if (location.pathname.length > 1 && location.pathname.endsWith('/')) {
+    return <Navigate to={{ ...location, pathname: location.pathname.replace(/\/+$/, '') }} replace />;
+  }
+  return null;
+};
+
 const App = () => {
   return (
     <LanguageProvider>
       <Router>
         <ScrollToTop />
+        <TrailingSlashRedirect />
         <div className="min-h-screen flex flex-col font-sans">
           <Navbar />
           
@@ -50,6 +64,10 @@ const App = () => {
                 />
               ))}
               
+              <Route path="/about" element={<About />} />
+              <Route path="/privacy-policy" element={<Privacy />} />
+              <Route path="/terms-of-service" element={<Terms />} />
+              <Route path="/dmca" element={<Dmca />} />
               <Route path="/user-guide" element={<UserGuide />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/feedback" element={<Feedback />} />
@@ -108,16 +126,22 @@ const App = () => {
               </div>
 
               {/* Bottom bar */}
-              <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-text-secondary opacity-75">
+              <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-text-secondary opacity-80">
                 <p>© {new Date().getFullYear()} mediasaver. All rights reserved.</p>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
+                  <a href="/about" className="hover:text-accent hover:underline">About</a>
+                  <span>•</span>
+                  <a href="/privacy-policy" className="hover:text-accent hover:underline">Privacy Policy</a>
+                  <span>•</span>
+                  <a href="/terms-of-service" className="hover:text-accent hover:underline">Terms of Service</a>
+                  <span>•</span>
+                  <a href="/dmca" className="hover:text-accent hover:underline">DMCA</a>
+                  <span>•</span>
                   <a href="/user-guide" className="hover:text-accent hover:underline">User Guide</a>
                   <span>•</span>
                   <a href="/contact" className="hover:text-accent hover:underline">Contact</a>
                   <span>•</span>
                   <a href="/feedback" className="hover:text-accent hover:underline">Feedback</a>
-                  <span>•</span>
-                  <p>For personal and educational use only.</p>
                 </div>
               </div>
             </div>
