@@ -173,9 +173,38 @@ const createApp = () => {
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
-        'script-src': ["'self'", 'https://www.googletagmanager.com', "'unsafe-inline'"],
-        'script-src-elem': ["'self'", 'https://www.googletagmanager.com', "'unsafe-inline'"],
-        'connect-src': ["'self'", 'https://www.google-analytics.com', 'https://www.googletagmanager.com'],
+        'script-src': [
+          "'self'",
+          'https://www.googletagmanager.com',
+          'https://*.googletagmanager.com',
+          'https://www.google-analytics.com',
+          'https://*.google-analytics.com',
+          'https://analytics.google.com',
+          'https://*.analytics.google.com',
+          "'unsafe-inline'",
+        ],
+        'script-src-elem': [
+          "'self'",
+          'https://www.googletagmanager.com',
+          'https://*.googletagmanager.com',
+          'https://www.google-analytics.com',
+          'https://*.google-analytics.com',
+          'https://analytics.google.com',
+          'https://*.analytics.google.com',
+          "'unsafe-inline'",
+        ],
+        'connect-src': [
+          "'self'",
+          'https://analytics.google.com',
+          'https://*.analytics.google.com',
+          'https://www.google-analytics.com',
+          'https://*.google-analytics.com',
+          'https://www.googletagmanager.com',
+          'https://*.googletagmanager.com',
+          'https://www.google.com',
+          'https://*.google.com',
+          'https://stats.g.doubleclick.net',
+        ],
         'img-src': ["'self'", 'https:', 'data:', 'blob:'],
         'media-src': ["'self'", 'https:', 'data:', 'blob:'],
         'frame-src': [
@@ -202,6 +231,45 @@ const createApp = () => {
   app.use(compression());
   app.use(express.json({ limit: '10kb' }));
   app.use(rateLimiter);
+
+  // First-party telemetry proxy (adblocker-resistant, zero client-side duplication)
+  app.get('/t/lib.js', async (req, res) => {
+    try {
+      const id = req.query.id || 'G-9SP0C2B2H7';
+      const upstream = await fetch(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`);
+      if (!upstream.ok) return res.status(upstream.status).end();
+      const text = await upstream.text();
+      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=43200');
+      return res.send(text);
+    } catch {
+      return res.status(500).end();
+    }
+  });
+
+  app.all('/t/g/collect', express.raw({ type: '*/*', limit: '50kb' }), async (req, res) => {
+    try {
+      const targetUrl = `https://analytics.google.com/g/collect?${new URLSearchParams(req.query).toString()}`;
+      const headers = {
+        'User-Agent': req.headers['user-agent'] || '',
+        'Accept-Language': req.headers['accept-language'] || '',
+        'X-Forwarded-For': req.headers['x-forwarded-for'] || req.socket.remoteAddress || '',
+      };
+      if (req.headers['content-type']) {
+        headers['Content-Type'] = req.headers['content-type'];
+      }
+
+      const upstream = await fetch(targetUrl, {
+        method: req.method,
+        headers,
+        body: req.method === 'POST' ? req.body : undefined,
+      });
+
+      return res.status(upstream.status).end();
+    } catch {
+      return res.status(204).end();
+    }
+  });
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });

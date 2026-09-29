@@ -4,17 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9SP0C2B2H7"></script>
+    <!-- Analytics via first-party proxy (adblocker resistant, zero duplication) -->
+    <script async src="/t/lib.js?id=G-9SP0C2B2H7"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-9SP0C2B2H7');
+      gtag('config', 'G-9SP0C2B2H7', {
+        transport_url: '/t'
+      });
     </script>
-    <link rel="icon" type="image/png" href="/mediasaver-favicon.png" />
-    <link rel="apple-touch-icon" href="/mediasaver-favicon.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <title>mediasaver: Download Videos & Music from Any URL | Free Downloader</title>
     
     <meta name="description" content="Free online downloader for videos & music. Save from YouTube, Instagram, Facebook, Twitter (X), Spotify, Apple Music, SoundCloud & more — just paste a URL." />

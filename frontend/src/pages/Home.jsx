@@ -27,6 +27,14 @@ const Home = () => {
   } = useVideoExtraction();
 
   const homeSchema = useMemo(() => {
+    const websiteSchema = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "mediasaver",
+      "alternateName": ["MediaSaver", "mediasaver-57yu.onrender.com"],
+      "url": "https://mediasaver-57yu.onrender.com/"
+    };
+
     const webAppSchema = {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -54,7 +62,7 @@ const Home = () => {
       }))
     };
 
-    return [webAppSchema, faqSchema];
+    return [websiteSchema, webAppSchema, faqSchema];
   }, []);
 
   return (
